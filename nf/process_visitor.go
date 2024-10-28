@@ -16,6 +16,7 @@ type Process struct {
 	Outputs    []outputs.Output
 	Directives []directives.Directive
 	Closure    *parser.ClosureExpression
+	Errors     []error
 }
 
 type ProcessVisitor struct {
@@ -157,6 +158,7 @@ func makeProcess(name string, closure *parser.ClosureExpression) Process {
 		Outputs:    visitor.outputs,
 		Directives: visitor.directives,
 		Closure:    closure,
+		Errors:     visitor.errors,
 	}
 }
 

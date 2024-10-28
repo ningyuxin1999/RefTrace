@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reft-go/parser"
+	"strings"
 	"testing"
 )
 
@@ -119,6 +120,25 @@ func TestChannelFromPath(t *testing.T) {
 
 func TestCountProcesses(t *testing.T) {
 	filePath := filepath.Join(getTestDataDir(), "nf-core")
+	_, err := ProcessDirectory(filePath)
+	if err == nil {
+		t.Fatal("Expected error when processing directory, but got none")
+	}
+
+	testDataDir := getTestDataDir()
+	expectedError := "encountered 2 errors: [" +
+		filepath.Join(testDataDir, "nf-core/clipseq/main.nf") + ": errors found in processes in " +
+		filepath.Join(testDataDir, "nf-core/clipseq/main.nf") + ": process 'generate_star_index': invalid publish dir directive: no valid path specified; process 'generate_star_index_no_gtf': invalid publish dir directive: no valid path specified " +
+		filepath.Join(testDataDir, "nf-core/eager/main.nf") + ": only DSL2 scripts are supported. Found explicit DSL1 declaration in " +
+		filepath.Join(testDataDir, "nf-core/eager/main.nf") + "]"
+
+	if err.Error() != expectedError {
+		t.Errorf("Expected error:\n%s\n\nGot:\n%s", expectedError, err.Error())
+	}
+}
+
+func TestCountProcessesAirrflow(t *testing.T) {
+	filePath := filepath.Join(getTestDataDir(), "nf-core", "airrflow")
 	modules, err := ProcessDirectory(filePath)
 	if err != nil {
 		t.Fatalf("Failed to process directory: %v", err)
@@ -132,8 +152,53 @@ func TestCountProcesses(t *testing.T) {
 	t.Logf("Found %d modules with a total of %d processes", len(modules), totalProcesses)
 }
 
-func TestCountProcessesAirrflow(t *testing.T) {
-	filePath := filepath.Join(getTestDataDir(), "nf-core", "airrflow")
+func TestCountProcessesGWAS(t *testing.T) {
+	filePath := filepath.Join(getTestDataDir(), "nf-core", "gwas")
+	modules, err := ProcessDirectory(filePath)
+	if err != nil {
+		t.Fatalf("Failed to process directory: %v", err)
+	}
+
+	totalProcesses := 0
+	for _, module := range modules {
+		totalProcesses += len(module.Processes)
+	}
+
+	t.Logf("Found %d modules with a total of %d processes", len(modules), totalProcesses)
+}
+
+func TestCountProcessesPathogenSurveillance(t *testing.T) {
+	filePath := filepath.Join(getTestDataDir(), "nf-core", "pathogensurveillance")
+	modules, err := ProcessDirectory(filePath)
+	if err != nil {
+		t.Fatalf("Failed to process directory: %v", err)
+	}
+
+	totalProcesses := 0
+	for _, module := range modules {
+		totalProcesses += len(module.Processes)
+	}
+
+	t.Logf("Found %d modules with a total of %d processes", len(modules), totalProcesses)
+}
+
+func TestFetchNGS(t *testing.T) {
+	filePath := filepath.Join(getTestDataDir(), "nf-core", "fetchngs")
+	modules, err := ProcessDirectory(filePath)
+	if err != nil {
+		t.Fatalf("Failed to process directory: %v", err)
+	}
+
+	totalProcesses := 0
+	for _, module := range modules {
+		totalProcesses += len(module.Processes)
+	}
+
+	t.Logf("Found %d modules with a total of %d processes", len(modules), totalProcesses)
+}
+
+func TestPGDB(t *testing.T) {
+	filePath := filepath.Join(getTestDataDir(), "nf-core", "pgdb")
 	modules, err := ProcessDirectory(filePath)
 	if err != nil {
 		t.Fatalf("Failed to process directory: %v", err)
@@ -159,5 +224,18 @@ func TestIfStatementProcess(t *testing.T) {
 	process := module.Processes[0]
 	if len(process.Directives) != 4 {
 		t.Fatalf("Expected 4 directives, got %d", len(process.Directives))
+	}
+}
+
+func TestRejectDSL1(t *testing.T) {
+	filePath := filepath.Join(getTestDataDir(), "nf-testdata", "dsl1.nf")
+	_, err := BuildModule(filePath)
+	if err == nil {
+		t.Fatal("Expected error when processing explicit DSL1 script, but got none")
+	}
+
+	expectedError := "only DSL2 scripts are supported"
+	if !strings.Contains(err.Error(), expectedError) {
+		t.Errorf("Expected error containing '%s', but got: %v", expectedError, err)
 	}
 }

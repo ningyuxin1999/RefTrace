@@ -3,20 +3,42 @@ package nf
 import (
 	"fmt"
 	"reft-go/parser"
+	"strings"
 
 	"go.starlark.net/starlark"
 )
 
 type Module struct {
-	Path      string
-	Processes []Process
-	Includes  []IncludeStatement
+	Path       string
+	Processes  []Process
+	Includes   []IncludeStatement
+	DSLVersion int
 }
 
 func BuildModule(filePath string) (*Module, error) {
 	ast, err := parser.BuildAST(filePath)
 	if err != nil {
 		return nil, err
+	}
+
+	dslVersion := 2
+	for _, stmt := range ast.StatementBlock.GetStatements() {
+		if expr, ok := stmt.(*parser.ExpressionStatement); ok {
+			if binExpr, ok := expr.GetExpression().(*parser.BinaryExpression); ok {
+				if binExpr.GetLeftExpression().GetText() == "nextflow.enable.dsl" {
+					if constExpr, ok := binExpr.GetRightExpression().(*parser.ConstantExpression); ok {
+						if constExpr.GetValue() == 1 {
+							dslVersion = 1
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if dslVersion == 1 {
+		return nil, fmt.Errorf("only DSL2 scripts are supported. Found explicit DSL1 declaration in %s", filePath)
 	}
 
 	includeVisitor := NewIncludeVisitor()
@@ -26,10 +48,28 @@ func BuildModule(filePath string) (*Module, error) {
 	processVisitor := NewProcessVisitor()
 	processVisitor.VisitBlockStatement(ast.StatementBlock)
 	processes := processVisitor.processes
+
+	// Collect process errors into error message
+	var processErrors []string
+	hasErrors := false
+	for _, process := range processes {
+		if len(process.Errors) > 0 {
+			hasErrors = true
+			for _, err := range process.Errors {
+				processErrors = append(processErrors, fmt.Sprintf("process '%s': %v", process.Name, err))
+			}
+		}
+	}
+
+	if hasErrors {
+		return nil, fmt.Errorf("errors found in processes in %s: %s", filePath, strings.Join(processErrors, "; "))
+	}
+
 	return &Module{
-		Path:      filePath,
-		Processes: processes,
-		Includes:  includes,
+		Path:       filePath,
+		Processes:  processes,
+		Includes:   includes,
+		DSLVersion: dslVersion,
 	}, nil
 }
 

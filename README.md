@@ -1,12 +1,35 @@
 # RefTrace
 
-Code analysis tool for bioinformatics pipelines.
-Currently supports linting for Nextflow pipelines. See https://reftrace.com for more information.
+<p align="center">
+  <a href="https://github.com/reftrace/reftrace/releases"><img src="https://img.shields.io/github/release/reftrace/reftrace" alt="GitHub release"></a>
+  <a href="https://discord.gg/kK7hVKXHQ3"><img src="https://img.shields.io/discord/1299076437571010580?color=blue" alt="Discord chat"></a>
+</p>
+
+Code analysis tool for bioinformatics pipelines.  
+Currently supports linting for Nextflow pipelines.  
+See https://reftrace.com and [📺 Watch a 2 minute tutorial](https://customer-rmcf6d3u09leya5y.cloudflarestream.com/eec7ef6db680b66733045242c9d1cb43/watch).
 
 ## Features
 
 - Write custom linting rules in a Python-like language.
+- Avoid parsing the Nextflow DSL.
 - Deploy as a static binary.
+
+### Example Rule
+
+```python
+# This file should exist in the root of your pipeline directory
+def has_label(directives):
+    return len(directives.label) > 0
+
+def has_cpus(directives):
+    return len(directives.cpus) > 0
+
+def rule_has_label_or_cpus(module):
+    for process in module.processes:
+        if not (has_label(process.directives) or has_cpus(process.directives)):
+            fatal("process %s has no label or cpus directive" % process.name)
+```
 
 ## Download
 
@@ -45,8 +68,6 @@ Rule: check_cpu_directive
 
 ## Usage
 
-[Watch a video tutorial](https://customer-rmcf6d3u09leya5y.cloudflarestream.com/eec7ef6db680b66733045242c9d1cb43/watch)
-
 ### Command
 
 The primary command for this tool is `lint`, which can be used as follows:
@@ -69,7 +90,7 @@ To lint the current directory using the default `rules.py` file:
 reft lint
 ```
 
-To lint a specific directory with a custom rules file:
+To lint a specific directory with a different rules file:
 
 ```bash
 reft lint -d /path/to/dir -r /path/to/custom_rules.py
@@ -85,16 +106,17 @@ reft lint -n rule_name
 
 ```python
 # This file should exist in the root of your pipeline directory
-def has_label(directives):
-    return len(directives.label) > 0
-
-def has_cpus(directives):
-    return len(directives.cpus) > 0
-
-def rule_has_label_or_cpus(module):
+def rule_check_cpu_directive(module):
     for process in module.processes:
-        if not (has_label(process.directives) or has_cpus(process.directives)):
-            fatal("process %s has no label or cpus directive" % process.name)
+        cpu_directives = process.directives.cpus
+        if not cpu_directives:
+            # No CPU directive, so we skip this process
+            return
+        
+        for cpu_directive in cpu_directives:
+            cpu_value = cpu_directive.num
+            if cpu_value < 2 or cpu_value > 96:
+                fatal("Process %s has an invalid CPU value. It should be >= 2 and <= 96, but it is %d" % (process.name, cpu_value))
 ```
 
 ## Example Linting Rules
@@ -102,6 +124,8 @@ def rule_has_label_or_cpus(module):
 See the [example linting rules](example_linting_rules) directory. See the [API reference](https://reftrace.com/reference/linting_api/). A small tutorial can be found [here](https://reftrace.com/guides/nextflow_linting_examples).  
 
 ## Building
+
+You need Go.
 
 ```
 go generate ./...
@@ -114,6 +138,14 @@ Getting licenses of dependencies:
 
 ```
 go-licenses save . --save_path="licenses"
+```
+
+### Adding a new dependency
+
+```
+go get <package>
+go mod vendor
+git restore vendor/github.com/antlr4-go/antlr/v4/lexer.go  # dependency we patched
 ```
 
 ## Limitations

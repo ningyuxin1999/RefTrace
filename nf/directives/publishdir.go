@@ -16,7 +16,15 @@ var _ starlark.HasAttrs = (*PublishDirDirective)(nil)
 func (p *PublishDirDirective) Attr(name string) (starlark.Value, error) {
 	switch name {
 	case "path":
-		return starlark.String(p.Path), nil
+		if p.Path != "" {
+			return starlark.String(p.Path), nil
+		}
+		return starlark.None, nil
+	case "params":
+		if p.Params != "" {
+			return starlark.String(p.Params), nil
+		}
+		return starlark.None, nil
 	case "contentType":
 		if p.ContentType != nil {
 			return starlark.Bool(*p.ContentType), nil
@@ -45,11 +53,12 @@ func (p *PublishDirDirective) Attr(name string) (starlark.Value, error) {
 }
 
 func (p *PublishDirDirective) AttrNames() []string {
-	return []string{"path", "contentType", "enabled", "failOnError", "mode", "overwrite"}
+	return []string{"path", "params", "contentType", "enabled", "failOnError", "mode", "overwrite"}
 }
 
 type PublishDirDirective struct {
 	Path        string
+	Params      string
 	ContentType *bool
 	Enabled     *bool
 	FailOnError *bool
@@ -58,8 +67,19 @@ type PublishDirDirective struct {
 }
 
 func (p *PublishDirDirective) String() string {
-	return fmt.Sprintf("PublishDirDirective(Path: %q, ContentType: %v, Enabled: %v, FailOnError: %v, Mode: %q, Overwrite: %v)",
-		p.Path, boolPtrToString(p.ContentType), boolPtrToString(p.Enabled), boolPtrToString(p.FailOnError), p.Mode, boolPtrToString(p.Overwrite))
+	pathStr := p.Path
+	if p.Params != "" {
+		pathStr = fmt.Sprintf("params.%s", p.Params)
+	}
+
+	return fmt.Sprintf("PublishDirDirective(Path: %q, Params: %q, ContentType: %v, Enabled: %v, FailOnError: %v, Mode: %q, Overwrite: %v)",
+		pathStr,
+		p.Params,
+		boolPtrToString(p.ContentType),
+		boolPtrToString(p.Enabled),
+		boolPtrToString(p.FailOnError),
+		p.Mode,
+		boolPtrToString(p.Overwrite))
 }
 
 func (p *PublishDirDirective) Type() string {
@@ -95,78 +115,102 @@ func boolPtrToString(b *bool) string {
 
 func MakePublishDirDirective(mce *parser.MethodCallExpression) (Directive, error) {
 	var dir string = ""
+	var paramName string = ""
 	var contentType *bool = nil
 	var enabled *bool = nil
 	var failOnError *bool = nil
 	var mode string = ""
 	var overwrite *bool = nil
+
 	if args, ok := mce.GetArguments().(*parser.ArgumentListExpression); ok {
 		exprs := args.GetExpressions()
 		for _, expr := range exprs {
-			if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
-				value := constantExpr.GetValue()
-				if strValue, ok := value.(string); ok {
-					dir = strValue
+			// Handle direct arguments
+			switch e := expr.(type) {
+			case *parser.ConstantExpression:
+				if value, ok := e.GetValue().(string); ok {
+					dir = value
 				}
-			}
-			if mapExpr, ok := expr.(*parser.MapExpression); ok {
-				entries := mapExpr.GetMapEntryExpressions()
+			case *parser.GStringExpression:
+				dir = e.GetText()
+			case *parser.PropertyExpression:
+				// Check if this is a params reference
+				if ve, ok := e.GetObjectExpression().(*parser.VariableExpression); ok &&
+					ve.GetText() == "params" {
+					if prop, ok := e.GetProperty().(*parser.ConstantExpression); ok {
+						paramName = prop.GetText()
+						dir = "" // Clear dir as we're using params
+					}
+				}
+			case *parser.MapExpression:
+				entries := e.GetMapEntryExpressions()
 				for _, entry := range entries {
-					if entry.GetKeyExpression().GetText() == "contentType" {
-						if constantExpr, ok := entry.GetValueExpression().(*parser.ConstantExpression); ok {
-							v := constantExpr.GetValue()
-							if vb, ok := v.(bool); ok {
-								contentType = &vb
+					key := entry.GetKeyExpression().GetText()
+					valueExpr := entry.GetValueExpression()
+
+					switch key {
+					case "path":
+						switch ve := valueExpr.(type) {
+						case *parser.ConstantExpression:
+							dir = ve.GetText()
+						case *parser.GStringExpression:
+							dir = ve.GetText()
+						case *parser.PropertyExpression:
+							// Handle cases like params.output_dir in the path option
+							if obj, ok := ve.GetObjectExpression().(*parser.VariableExpression); ok &&
+								obj.GetText() == "params" {
+								if prop, ok := ve.GetProperty().(*parser.ConstantExpression); ok {
+									paramName = prop.GetText()
+									dir = "" // Clear dir as we're using params
+								}
 							}
 						}
-					}
-					if entry.GetKeyExpression().GetText() == "enabled" {
-						if constantExpr, ok := entry.GetValueExpression().(*parser.ConstantExpression); ok {
-							v := constantExpr.GetValue()
-							if vb, ok := v.(bool); ok {
-								enabled = &vb
+					case "contentType":
+						if ce, ok := valueExpr.(*parser.ConstantExpression); ok {
+							if v, ok := ce.GetValue().(bool); ok {
+								contentType = &v
 							}
 						}
-					}
-					if entry.GetKeyExpression().GetText() == "failOnError" {
-						if constantExpr, ok := entry.GetValueExpression().(*parser.ConstantExpression); ok {
-							v := constantExpr.GetValue()
-							if vb, ok := v.(bool); ok {
-								failOnError = &vb
+					case "enabled":
+						if ce, ok := valueExpr.(*parser.ConstantExpression); ok {
+							if v, ok := ce.GetValue().(bool); ok {
+								enabled = &v
 							}
 						}
-					}
-					if entry.GetKeyExpression().GetText() == "mode" {
-						if constantExpr, ok := entry.GetValueExpression().(*parser.ConstantExpression); ok {
-							mode = constantExpr.GetText()
-						}
-					}
-					if entry.GetKeyExpression().GetText() == "overwrite" {
-						if constantExpr, ok := entry.GetValueExpression().(*parser.ConstantExpression); ok {
-							v := constantExpr.GetValue()
-							if vb, ok := v.(bool); ok {
-								overwrite = &vb
+					case "failOnError":
+						if ce, ok := valueExpr.(*parser.ConstantExpression); ok {
+							if v, ok := ce.GetValue().(bool); ok {
+								failOnError = &v
 							}
 						}
-					}
-					if entry.GetKeyExpression().GetText() == "path" {
-						if constantExpr, ok := entry.GetValueExpression().(*parser.ConstantExpression); ok {
-							dir = constantExpr.GetText()
+					case "mode":
+						if ce, ok := valueExpr.(*parser.ConstantExpression); ok {
+							mode = ce.GetText()
+						}
+					case "overwrite":
+						if ce, ok := valueExpr.(*parser.ConstantExpression); ok {
+							if v, ok := ce.GetValue().(bool); ok {
+								overwrite = &v
+							}
 						}
 					}
 				}
 			}
 		}
 	}
-	if dir != "" {
-		return &PublishDirDirective{
-			Path:        dir,
-			ContentType: contentType,
-			Enabled:     enabled,
-			FailOnError: failOnError,
-			Mode:        mode,
-			Overwrite:   overwrite,
-		}, nil
+
+	// Validate that we have either a path or a params reference
+	if dir == "" && paramName == "" {
+		return nil, errors.New("invalid publish dir directive: no valid path specified")
 	}
-	return nil, errors.New("invalid publish dir directive")
+
+	return &PublishDirDirective{
+		Path:        dir,
+		Params:      paramName,
+		ContentType: contentType,
+		Enabled:     enabled,
+		FailOnError: failOnError,
+		Mode:        mode,
+		Overwrite:   overwrite,
+	}, nil
 }

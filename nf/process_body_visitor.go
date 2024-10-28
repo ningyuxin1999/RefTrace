@@ -2,6 +2,7 @@ package nf
 
 import (
 	"errors"
+	"fmt"
 	"reft-go/parser"
 
 	"reft-go/nf/directives"
@@ -26,6 +27,7 @@ type ProcessBodyVisitor struct {
 	inputs       []inputs.Input
 	outputs      []outputs.Output
 	directives   []directives.Directive
+	errors       []error
 }
 
 // NewProcessBodyVisitor creates a new ProcessBodyVisitor
@@ -77,9 +79,21 @@ var directiveSet = map[string]func(*parser.MethodCallExpression) (directives.Dir
 }
 
 func makeDirective(statement parser.Statement) (directives.Directive, error) {
-	// TODO: handle top-level if statements
+	// Skip if-statements for now
+	if _, ok := statement.(*parser.IfStatement); ok {
+		// TODO: handle top-level if statements in directives
+		return nil, nil
+	}
 	if exprStmt, ok := statement.(*parser.ExpressionStatement); ok {
-		if mce, ok := exprStmt.GetExpression().(*parser.MethodCallExpression); ok {
+		expr := exprStmt.GetExpression()
+
+		// Skip binary expressions
+		// TODO: handle this
+		if _, ok := expr.(*parser.BinaryExpression); ok {
+			return nil, nil
+		}
+
+		if mce, ok := expr.(*parser.MethodCallExpression); ok {
 			methodName := mce.GetMethod().GetText()
 
 			// Check if there's one argument and it's a closure
@@ -99,19 +113,45 @@ func makeDirective(statement parser.Statement) (directives.Directive, error) {
 			}
 			return &directives.UnknownDirective{Name: methodName}, nil
 		}
+		if _, ok := expr.(*parser.ConstantExpression); ok {
+			// TODO: revisit this - happens in script tag
+			return nil, nil
+		}
+		if _, ok := expr.(*parser.GStringExpression); ok {
+			// TODO: revisit this - happens in script tag
+			return nil, nil
+		}
+		if _, ok := expr.(*parser.DeclarationExpression); ok {
+			// TODO: revisit this - def statements in script tags
+			return nil, nil
+		}
+		if _, ok := expr.(*parser.PropertyExpression); ok {
+			// can occur in when blocks
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unknown statement: expected method call, got %T with content %s",
+			expr, expr.GetText())
 	}
-	return nil, errors.New("unknown statement")
+	return nil, fmt.Errorf("unknown statement: expected expression statement, got %T at line %d",
+		statement, statement.GetLineNumber())
 }
 
-func makeDirectives(statements []parser.Statement) []directives.Directive {
+func makeDirectives(statements []parser.Statement) ([]directives.Directive, []error) {
 	var directives []directives.Directive
+	var errors []error
+
 	for _, statement := range statements {
 		directive, err := makeDirective(statement)
-		if err == nil {
+		if err != nil {
+			errors = append(errors, err)
+			continue
+		}
+		if directive != nil {
 			directives = append(directives, directive)
 		}
 	}
-	return directives
+
+	return directives, errors
 }
 
 func makeInput(statement parser.Statement) (inputs.Input, error) {
@@ -206,12 +246,11 @@ func (v *ProcessBodyVisitor) VisitBlockStatement(block *parser.BlockStatement) {
 	possibleOutputs := findOutputs(stmts)
 	v.outputs = makeOutputs(possibleOutputs)
 	possibleDirectives := findPossibleDirectives(stmts)
-	v.directives = makeDirectives(possibleDirectives)
-	/*
-		for _, statement := range stmts {
-			v.VisitStatement(statement)
-		}
-	*/
+	directives, errors := makeDirectives(possibleDirectives)
+	v.directives = directives
+	if len(errors) > 0 {
+		v.errors = append(v.errors, errors...)
+	}
 }
 
 func findPossibleDirectives(statements []parser.Statement) []parser.Statement {

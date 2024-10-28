@@ -58,9 +58,11 @@ func MakeContainer(mce *parser.MethodCallExpression) (Directive, error) {
 		exprs := args.GetExpressions()
 		if len(exprs) == 1 {
 			if constantExpr, ok := exprs[0].(*parser.ConstantExpression); ok {
-				value := constantExpr.GetValue()
-				if strValue, ok := value.(string); ok {
-					return &Container{Name: strValue}, nil
+				if constantExpr.GetText() == "null" {
+					return &Container{Name: ""}, nil
+				}
+				if value, ok := constantExpr.GetValue().(string); ok {
+					return &Container{Name: value}, nil
 				}
 			}
 			if gstringExpr, ok := exprs[0].(*parser.GStringExpression); ok {

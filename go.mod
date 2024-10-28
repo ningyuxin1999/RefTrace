@@ -7,9 +7,11 @@ require (
 	github.com/fatih/color v1.17.0
 	github.com/spf13/cobra v1.8.1
 	go.starlark.net v0.0.0-20240725214946-42030a7cedce
+	github.com/magnetde/starlark-re v0.1.1
 )
 
 require (
+	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
