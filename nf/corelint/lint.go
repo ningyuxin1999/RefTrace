@@ -2,6 +2,7 @@ package corelint
 
 import (
 	"fmt"
+	"net/url"
 	"reft-go/nf"
 	"reft-go/nf/directives"
 	"strings"
@@ -53,11 +54,13 @@ func NFCoreLint(directory string) LintResults {
 type ModuleError struct {
 	ModulePath string
 	Error      error
+	Line       int
 }
 
 type ModuleWarning struct {
 	ModulePath string
 	Warning    string
+	Line       int
 }
 
 type LintResults struct {
@@ -84,30 +87,14 @@ func ruleContainerWithSpace(module *nf.Module) LintResult {
 	for _, process := range module.Processes {
 		for _, directive := range process.Directives {
 			if container, ok := directive.(*directives.Container); ok {
-				if container.Format == directives.Simple {
-					if strings.Contains(container.SimpleName, " ") {
+				names := container.GetNames()
+				for _, name := range names {
+					if strings.Contains(name, " ") {
 						return LintResult{
 							Error: &ModuleError{
 								ModulePath: module.Path,
 								Error:      fmt.Errorf("container name '%s' contains spaces, which is not allowed", container.SimpleName),
-							},
-						}
-					}
-				}
-				if container.Format == directives.Ternary {
-					if strings.Contains(container.TrueName, " ") {
-						return LintResult{
-							Error: &ModuleError{
-								ModulePath: module.Path,
-								Error:      fmt.Errorf("container true_name '%s' contains spaces, which is not allowed", container.TrueName),
-							},
-						}
-					}
-					if strings.Contains(container.FalseName, " ") {
-						return LintResult{
-							Error: &ModuleError{
-								ModulePath: module.Path,
-								Error:      fmt.Errorf("container false_name '%s' contains spaces, which is not allowed", container.FalseName),
+								Line:       container.Line(),
 							},
 						}
 					}
@@ -122,13 +109,14 @@ func ruleMultipleContainers(module *nf.Module) LintResult {
 	for _, process := range module.Processes {
 		for _, directive := range process.Directives {
 			if container, ok := directive.(*directives.Container); ok {
-				name := container.GetName()
-				if strings.Contains(name, "biocontainers/") {
-					if strings.Contains(name, "https://containers") || strings.Contains(name, "https://depot") {
+				names := container.GetNames()
+				for _, name := range names {
+					if strings.Contains(name, "biocontainers/") && (strings.Contains(name, "https://containers") || strings.Contains(name, "https://depot")) {
 						return LintResult{
 							Warning: &ModuleWarning{
 								ModulePath: module.Path,
 								Warning:    "Docker and Singularity containers specified on the same line",
+								Line:       container.Line(),
 							},
 						}
 					}
@@ -137,4 +125,26 @@ func ruleMultipleContainers(module *nf.Module) LintResult {
 		}
 	}
 	return LintResult{}
+}
+
+func dockerOrSingularity(containerName string) string {
+	// Check for Singularity container URLs
+	if strings.HasPrefix(containerName, "https://") || strings.HasPrefix(containerName, "https://depot") {
+		// Try parsing as URL to validate
+		_, err := url.Parse(containerName)
+		if err == nil {
+			return "singularity"
+		}
+		return ""
+	}
+
+	// Check for Docker container format (org/image:tag)
+	if strings.Count(containerName, "/") >= 1 &&
+		strings.Count(containerName, ":") == 1 &&
+		strings.Count(containerName, " ") == 0 &&
+		!strings.Contains(containerName, "https://") {
+		return "docker"
+	}
+
+	return ""
 }

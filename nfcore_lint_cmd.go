@@ -43,7 +43,7 @@ func runNFCoreLint(cmd *cobra.Command, args []string) {
 	if len(results.Warnings) > 0 {
 		fmt.Println("\nWarnings:")
 		for _, warning := range results.Warnings {
-			pathPrinter.Printf("  • %s\n", warning.ModulePath)
+			pathPrinter.Printf("  • %s:%d\n", warning.ModulePath, warning.Line)
 			warningPrinter.Printf("    %s\n", warning.Warning)
 		}
 	}
@@ -52,7 +52,7 @@ func runNFCoreLint(cmd *cobra.Command, args []string) {
 		hasErrors = true
 		fmt.Println("\nErrors:")
 		for _, err := range results.Errors {
-			pathPrinter.Printf("  • %s\n", err.ModulePath)
+			pathPrinter.Printf("  • %s:%d\n", err.ModulePath, err.Line)
 			errorPrinter.Printf("    %s\n", err.Error.Error())
 		}
 	}

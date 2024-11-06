@@ -104,6 +104,16 @@ func (c *Container) GetName() string {
 	panic("invalid container format")
 }
 
+func (c *Container) GetNames() []string {
+	switch c.Format {
+	case Simple:
+		return []string{c.SimpleName}
+	case Ternary:
+		return []string{c.TrueName, c.FalseName}
+	}
+	panic("invalid container format")
+}
+
 func (c *Container) Line() int {
 	return c.line
 }
