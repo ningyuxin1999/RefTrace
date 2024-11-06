@@ -17,9 +17,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	version = "0.3.0"
-)
+// Set by the release process
+var version = "dev"
 
 //go:embed licenses/*
 var folder embed.FS
