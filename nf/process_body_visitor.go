@@ -111,6 +111,18 @@ func makeDirective(statement parser.Statement) (directives.Directive, error) {
 			if makeFunc, exists := directiveSet[methodName]; exists {
 				return makeFunc(mce)
 			}
+
+			// check for multiple MCEs (can happen with excessive quotes)
+			if objMce, ok := mce.GetObjectExpression().(*parser.MethodCallExpression); ok {
+				methodName = objMce.GetMethod().GetText()
+				if methodName == "container" {
+					var args string
+					args += objMce.GetArguments().GetText()
+					args += mce.GetMethodAsString()
+					args += mce.GetArguments().GetText()
+					return nil, fmt.Errorf("too many quotes found when specifying container: %s", args)
+				}
+			}
 			return &directives.UnknownDirective{Name: methodName}, nil
 		}
 		if _, ok := expr.(*parser.ConstantExpression); ok {

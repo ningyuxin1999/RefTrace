@@ -1,5 +1,7 @@
 package parser
 
+import "strings"
+
 var _ Expression = (*ArgumentListExpression)(nil)
 var _ ITupleExpression = (*ArgumentListExpression)(nil)
 
@@ -71,4 +73,17 @@ func (a *ArgumentListExpression) GetExpression(i int) Expression {
 func (a *ArgumentListExpression) PrependExpression(expression Expression) ITupleExpression {
 	a.expressions = append([]Expression{expression}, a.expressions...)
 	return a
+}
+
+func (a *ArgumentListExpression) GetText() string {
+	var buffer strings.Builder
+	buffer.WriteString("(")
+	for i, expression := range a.GetExpressions() {
+		if i > 0 {
+			buffer.WriteString(", ")
+		}
+		buffer.WriteString(expression.GetText())
+	}
+	buffer.WriteString(")")
+	return buffer.String()
 }
