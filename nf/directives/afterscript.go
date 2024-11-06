@@ -50,6 +50,11 @@ func (a *AfterScript) Hash() (uint32, error) {
 
 type AfterScript struct {
 	Script string
+	line   int
+}
+
+func (a *AfterScript) Line() int {
+	return a.line
 }
 
 func MakeAfterScript(mce *parser.MethodCallExpression) (Directive, error) {
@@ -59,11 +64,11 @@ func MakeAfterScript(mce *parser.MethodCallExpression) (Directive, error) {
 			if constantExpr, ok := exprs[0].(*parser.ConstantExpression); ok {
 				value := constantExpr.GetValue()
 				if strValue, ok := value.(string); ok {
-					return &AfterScript{Script: strValue}, nil
+					return &AfterScript{Script: strValue, line: mce.GetLineNumber()}, nil
 				}
 			}
 			if gstringExpr, ok := exprs[0].(*parser.GStringExpression); ok {
-				return &AfterScript{Script: gstringExpr.GetText()}, nil
+				return &AfterScript{Script: gstringExpr.GetText(), line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

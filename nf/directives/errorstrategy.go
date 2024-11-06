@@ -51,6 +51,11 @@ func (e *ErrorStrategyDirective) AttrNames() []string {
 
 type ErrorStrategyDirective struct {
 	Strategy string
+	line     int
+}
+
+func (e *ErrorStrategyDirective) Line() int {
+	return e.line
 }
 
 func MakeErrorStrategyDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -62,7 +67,7 @@ func MakeErrorStrategyDirective(mce *parser.MethodCallExpression) (Directive, er
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &ErrorStrategyDirective{Strategy: strValue}, nil
+				return &ErrorStrategyDirective{Strategy: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

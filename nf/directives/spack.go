@@ -28,6 +28,11 @@ func (s *SpackDirective) AttrNames() []string {
 
 type SpackDirective struct {
 	Dependencies string
+	line         int
+}
+
+func (s *SpackDirective) Line() int {
+	return s.line
 }
 
 func (s *SpackDirective) String() string {
@@ -61,7 +66,7 @@ func MakeSpackDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &SpackDirective{Dependencies: strValue}, nil
+				return &SpackDirective{Dependencies: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

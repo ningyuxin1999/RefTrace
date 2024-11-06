@@ -50,6 +50,11 @@ func (a *ArrayDirective) Hash() (uint32, error) {
 
 type ArrayDirective struct {
 	Size int
+	line int
+}
+
+func (a *ArrayDirective) Line() int {
+	return a.line
 }
 
 func MakeArrayDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -61,7 +66,7 @@ func MakeArrayDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if intValue, ok := constantExpr.GetValue().(int); ok {
-				return &ArrayDirective{Size: intValue}, nil
+				return &ArrayDirective{Size: intValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

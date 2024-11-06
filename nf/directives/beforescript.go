@@ -50,6 +50,11 @@ func (b *BeforeScript) Hash() (uint32, error) {
 
 type BeforeScript struct {
 	Script string
+	line   int
+}
+
+func (b *BeforeScript) Line() int {
+	return b.line
 }
 
 func MakeBeforeScript(mce *parser.MethodCallExpression) (Directive, error) {
@@ -59,11 +64,11 @@ func MakeBeforeScript(mce *parser.MethodCallExpression) (Directive, error) {
 			if constantExpr, ok := exprs[0].(*parser.ConstantExpression); ok {
 				value := constantExpr.GetValue()
 				if strValue, ok := value.(string); ok {
-					return &BeforeScript{Script: strValue}, nil
+					return &BeforeScript{Script: strValue, line: mce.GetLineNumber()}, nil
 				}
 			}
 			if gstringExpr, ok := exprs[0].(*parser.GStringExpression); ok {
-				return &BeforeScript{Script: gstringExpr.GetText()}, nil
+				return &BeforeScript{Script: gstringExpr.GetText(), line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

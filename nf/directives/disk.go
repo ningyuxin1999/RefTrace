@@ -51,6 +51,11 @@ func (d *DiskDirective) AttrNames() []string {
 
 type DiskDirective struct {
 	Space string
+	line  int
+}
+
+func (d *DiskDirective) Line() int {
+	return d.line
 }
 
 func MakeDiskDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -62,7 +67,7 @@ func MakeDiskDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &DiskDirective{Space: strValue}, nil
+				return &DiskDirective{Space: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

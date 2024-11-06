@@ -28,6 +28,11 @@ func (s *StoreDirDirective) AttrNames() []string {
 
 type StoreDirDirective struct {
 	Directory string
+	line      int
+}
+
+func (s *StoreDirDirective) Line() int {
+	return s.line
 }
 
 func (s *StoreDirDirective) String() string {
@@ -61,7 +66,7 @@ func MakeStoreDirDirective(mce *parser.MethodCallExpression) (Directive, error) 
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &StoreDirDirective{Directory: strValue}, nil
+				return &StoreDirDirective{Directory: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

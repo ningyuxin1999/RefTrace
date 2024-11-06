@@ -57,6 +57,11 @@ type CacheDirective struct {
 	Enabled bool
 	Deep    bool
 	Lenient bool
+	line    int
+}
+
+func (c *CacheDirective) Line() int {
+	return c.line
 }
 
 func MakeCacheDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -69,17 +74,17 @@ func MakeCacheDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if boolExpr, ok := constantExpr.GetValue().(bool); ok {
 				if boolExpr {
-					return &CacheDirective{Enabled: true}, nil
+					return &CacheDirective{Enabled: true, line: mce.GetLineNumber()}, nil
 				} else {
-					return &CacheDirective{Enabled: false}, nil
+					return &CacheDirective{Enabled: false, line: mce.GetLineNumber()}, nil
 				}
 			}
 			if stringExpr, ok := constantExpr.GetValue().(string); ok {
 				if stringExpr == "deep" {
-					return &CacheDirective{Enabled: true, Deep: true}, nil
+					return &CacheDirective{Enabled: true, Deep: true, line: mce.GetLineNumber()}, nil
 				}
 				if stringExpr == "lenient" {
-					return &CacheDirective{Enabled: true, Lenient: true}, nil
+					return &CacheDirective{Enabled: true, Lenient: true, line: mce.GetLineNumber()}, nil
 				}
 			}
 		}

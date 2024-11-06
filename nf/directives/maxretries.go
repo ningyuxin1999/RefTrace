@@ -27,7 +27,12 @@ func (m *MaxRetriesDirective) AttrNames() []string {
 }
 
 type MaxRetriesDirective struct {
-	Num int
+	Num  int
+	line int
+}
+
+func (m *MaxRetriesDirective) Line() int {
+	return m.line
 }
 
 func (m *MaxRetriesDirective) String() string {
@@ -61,7 +66,7 @@ func MakeMaxRetriesDirective(mce *parser.MethodCallExpression) (Directive, error
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if intValue, ok := constantExpr.GetValue().(int); ok {
-				return &MaxRetriesDirective{Num: intValue}, nil
+				return &MaxRetriesDirective{Num: intValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

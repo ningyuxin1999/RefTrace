@@ -53,6 +53,11 @@ func (a *Accelerator) Hash() (uint32, error) {
 type Accelerator struct {
 	NumGPUs int
 	GPUType string
+	line    int
+}
+
+func (a *Accelerator) Line() int {
+	return a.line
 }
 
 func MakeAccelerator(mce *parser.MethodCallExpression) (Directive, error) {
@@ -83,7 +88,7 @@ func MakeAccelerator(mce *parser.MethodCallExpression) (Directive, error) {
 		}
 	}
 	if numGPUs != -1 {
-		return &Accelerator{NumGPUs: numGPUs, GPUType: gpuType}, nil
+		return &Accelerator{NumGPUs: numGPUs, GPUType: gpuType, line: mce.GetLineNumber()}, nil
 	}
 	return nil, errors.New("invalid accelerator directive")
 }

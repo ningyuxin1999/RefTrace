@@ -55,6 +55,11 @@ func (e *ExtDirective) AttrNames() []string {
 type ExtDirective struct {
 	Version string
 	Args    string
+	line    int
+}
+
+func (e *ExtDirective) Line() int {
+	return e.line
 }
 
 func MakeExtDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -84,7 +89,7 @@ func MakeExtDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		}
 	}
 	if version != "" {
-		return &ExtDirective{Version: version, Args: extArgs}, nil
+		return &ExtDirective{Version: version, Args: extArgs, line: mce.GetLineNumber()}, nil
 	}
 	return nil, errors.New("invalid ext directive")
 }

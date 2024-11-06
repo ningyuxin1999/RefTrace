@@ -84,6 +84,11 @@ type ResourceLimitsDirective struct {
 	Disk   *string
 	Memory *string
 	Time   *string
+	line   int
+}
+
+func (r *ResourceLimitsDirective) Line() int {
+	return r.line
 }
 
 func MakeResourceLimitsDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -128,5 +133,6 @@ func MakeResourceLimitsDirective(mce *parser.MethodCallExpression) (Directive, e
 		Disk:   disk,
 		Memory: memory,
 		Time:   time,
+		line:   mce.GetLineNumber(),
 	}, nil
 }

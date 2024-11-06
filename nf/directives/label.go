@@ -28,6 +28,11 @@ func (l *LabelDirective) AttrNames() []string {
 
 type LabelDirective struct {
 	Label string
+	line  int
+}
+
+func (l *LabelDirective) Line() int {
+	return l.line
 }
 
 func (l *LabelDirective) String() string {
@@ -61,7 +66,7 @@ func MakeLabelDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &LabelDirective{Label: strValue}, nil
+				return &LabelDirective{Label: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

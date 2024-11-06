@@ -51,6 +51,11 @@ func (d *DebugDirective) AttrNames() []string {
 
 type DebugDirective struct {
 	Enabled bool
+	line    int
+}
+
+func (d *DebugDirective) Line() int {
+	return d.line
 }
 
 func MakeDebugDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -62,7 +67,7 @@ func MakeDebugDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if boolValue, ok := constantExpr.GetValue().(bool); ok {
-				return &DebugDirective{Enabled: boolValue}, nil
+				return &DebugDirective{Enabled: boolValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

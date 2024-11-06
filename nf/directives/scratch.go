@@ -31,6 +31,11 @@ func (s *ScratchDirective) AttrNames() []string {
 type ScratchDirective struct {
 	Enabled   bool
 	Directory string
+	line      int
+}
+
+func (s *ScratchDirective) Line() int {
+	return s.line
 }
 
 func (s *ScratchDirective) String() string {
@@ -79,5 +84,5 @@ func MakeScratchDirective(mce *parser.MethodCallExpression) (Directive, error) {
 			directory = gstringExpr.GetText()
 		}
 	}
-	return &ScratchDirective{Enabled: enabled, Directory: directory}, nil
+	return &ScratchDirective{Enabled: enabled, Directory: directory, line: mce.GetLineNumber()}, nil
 }

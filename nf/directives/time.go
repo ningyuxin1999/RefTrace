@@ -28,6 +28,11 @@ func (t *TimeDirective) AttrNames() []string {
 
 type TimeDirective struct {
 	Duration string
+	line     int
+}
+
+func (t *TimeDirective) Line() int {
+	return t.line
 }
 
 func (t *TimeDirective) String() string {
@@ -61,7 +66,7 @@ func MakeTimeDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &TimeDirective{Duration: strValue}, nil
+				return &TimeDirective{Duration: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

@@ -28,6 +28,11 @@ func (p *PenvDirective) AttrNames() []string {
 
 type PenvDirective struct {
 	Environment string
+	line        int
+}
+
+func (p *PenvDirective) Line() int {
+	return p.line
 }
 
 func (p *PenvDirective) String() string {
@@ -61,7 +66,7 @@ func MakePenvDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &PenvDirective{Environment: strValue}, nil
+				return &PenvDirective{Environment: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

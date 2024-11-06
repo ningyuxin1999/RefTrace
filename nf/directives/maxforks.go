@@ -27,7 +27,12 @@ func (m *MaxForksDirective) AttrNames() []string {
 }
 
 type MaxForksDirective struct {
-	Num int
+	Num  int
+	line int
+}
+
+func (m *MaxForksDirective) Line() int {
+	return m.line
 }
 
 func (m *MaxForksDirective) String() string {
@@ -61,7 +66,7 @@ func MakeMaxForksDirective(mce *parser.MethodCallExpression) (Directive, error) 
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if intValue, ok := constantExpr.GetValue().(int); ok {
-				return &MaxForksDirective{Num: intValue}, nil
+				return &MaxForksDirective{Num: intValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

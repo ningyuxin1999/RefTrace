@@ -28,6 +28,11 @@ func (m *MachineTypeDirective) AttrNames() []string {
 
 type MachineTypeDirective struct {
 	MachineType string
+	line        int
+}
+
+func (m *MachineTypeDirective) Line() int {
+	return m.line
 }
 
 func (m *MachineTypeDirective) String() string {
@@ -61,7 +66,7 @@ func MakeMachineTypeDirective(mce *parser.MethodCallExpression) (Directive, erro
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &MachineTypeDirective{MachineType: strValue}, nil
+				return &MachineTypeDirective{MachineType: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

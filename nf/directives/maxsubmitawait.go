@@ -28,6 +28,11 @@ func (m *MaxSubmitAwaitDirective) AttrNames() []string {
 
 type MaxSubmitAwaitDirective struct {
 	MaxSubmitAwait string
+	line           int
+}
+
+func (m *MaxSubmitAwaitDirective) Line() int {
+	return m.line
 }
 
 func (m *MaxSubmitAwaitDirective) String() string {
@@ -61,7 +66,7 @@ func MakeMaxSubmitAwaitDirective(mce *parser.MethodCallExpression) (Directive, e
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &MaxSubmitAwaitDirective{MaxSubmitAwait: strValue}, nil
+				return &MaxSubmitAwaitDirective{MaxSubmitAwait: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

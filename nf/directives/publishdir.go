@@ -64,6 +64,11 @@ type PublishDirDirective struct {
 	FailOnError *bool
 	Mode        string
 	Overwrite   *bool
+	line        int
+}
+
+func (p *PublishDirDirective) Line() int {
+	return p.line
 }
 
 func (p *PublishDirDirective) String() string {
@@ -212,5 +217,6 @@ func MakePublishDirDirective(mce *parser.MethodCallExpression) (Directive, error
 		FailOnError: failOnError,
 		Mode:        mode,
 		Overwrite:   overwrite,
+		line:        mce.GetLineNumber(),
 	}, nil
 }

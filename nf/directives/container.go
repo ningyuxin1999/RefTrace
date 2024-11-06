@@ -91,6 +91,7 @@ type Container struct {
 	Condition  string
 	TrueName   string
 	FalseName  string
+	line       int
 }
 
 func (c *Container) GetName() string {
@@ -103,19 +104,25 @@ func (c *Container) GetName() string {
 	panic("invalid container format")
 }
 
-func NewSimpleContainer(name string) *Container {
+func (c *Container) Line() int {
+	return c.line
+}
+
+func NewSimpleContainer(name string, line int) *Container {
 	return &Container{
 		Format:     Simple,
 		SimpleName: name,
+		line:       line,
 	}
 }
 
-func NewTernaryContainer(condition string, trueName string, falseName string) *Container {
+func NewTernaryContainer(condition string, trueName string, falseName string, line int) *Container {
 	return &Container{
 		Format:    Ternary,
 		Condition: condition,
 		TrueName:  trueName,
 		FalseName: falseName,
+		line:      line,
 	}
 }
 
@@ -125,19 +132,19 @@ func MakeContainer(mce *parser.MethodCallExpression) (Directive, error) {
 		if len(exprs) == 1 {
 			if constantExpr, ok := exprs[0].(*parser.ConstantExpression); ok {
 				if constantExpr.GetText() == "null" {
-					return NewSimpleContainer(""), nil
+					return NewSimpleContainer("", mce.GetLineNumber()), nil
 				}
 				if value, ok := constantExpr.GetValue().(string); ok {
-					return NewSimpleContainer(value), nil
+					return NewSimpleContainer(value, mce.GetLineNumber()), nil
 				}
 			}
 			if gstringExpr, ok := exprs[0].(*parser.GStringExpression); ok {
 				if len(gstringExpr.GetValues()) == 1 {
 					if ternaryExpr, ok := gstringExpr.GetValues()[0].(*parser.TernaryExpression); ok {
-						return NewTernaryContainer(ternaryExpr.GetBooleanExpression().GetText(), ternaryExpr.GetTrueExpression().GetText(), ternaryExpr.GetFalseExpression().GetText()), nil
+						return NewTernaryContainer(ternaryExpr.GetBooleanExpression().GetText(), ternaryExpr.GetTrueExpression().GetText(), ternaryExpr.GetFalseExpression().GetText(), mce.GetLineNumber()), nil
 					}
 				}
-				return NewSimpleContainer(gstringExpr.GetText()), nil
+				return NewSimpleContainer(gstringExpr.GetText(), mce.GetLineNumber()), nil
 			}
 		}
 	}

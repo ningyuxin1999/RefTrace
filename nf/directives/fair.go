@@ -51,6 +51,11 @@ func (f *FairDirective) AttrNames() []string {
 
 type FairDirective struct {
 	Enabled bool
+	line    int
+}
+
+func (f *FairDirective) Line() int {
+	return f.line
 }
 
 func MakeFairDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -62,7 +67,7 @@ func MakeFairDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if boolValue, ok := constantExpr.GetValue().(bool); ok {
-				return &FairDirective{Enabled: boolValue}, nil
+				return &FairDirective{Enabled: boolValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

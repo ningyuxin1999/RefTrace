@@ -31,6 +31,11 @@ func (p *PodDirective) AttrNames() []string {
 type PodDirective struct {
 	Env   string
 	Value string
+	line  int
+}
+
+func (p *PodDirective) Line() int {
+	return p.line
 }
 
 func (p *PodDirective) String() string {
@@ -83,7 +88,7 @@ func MakePodDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		}
 	}
 	if env != "" && val != "" {
-		return &PodDirective{Env: env, Value: val}, nil
+		return &PodDirective{Env: env, Value: val, line: mce.GetLineNumber()}, nil
 	}
 	return nil, errors.New("invalid pod directive")
 }

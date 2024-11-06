@@ -28,6 +28,11 @@ func (q *QueueDirective) AttrNames() []string {
 
 type QueueDirective struct {
 	Name string
+	line int
+}
+
+func (q *QueueDirective) Line() int {
+	return q.line
 }
 
 func (q *QueueDirective) String() string {
@@ -61,7 +66,7 @@ func MakeQueueDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &QueueDirective{Name: strValue}, nil
+				return &QueueDirective{Name: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

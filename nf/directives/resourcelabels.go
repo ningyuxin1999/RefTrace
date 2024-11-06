@@ -32,6 +32,11 @@ func (r *ResourceLabelsDirective) AttrNames() []string {
 
 type ResourceLabelsDirective struct {
 	Keys []string
+	line int
+}
+
+func (r *ResourceLabelsDirective) Line() int {
+	return r.line
 }
 
 func (r *ResourceLabelsDirective) String() string {
@@ -73,5 +78,5 @@ func MakeResourceLabelsDirective(mce *parser.MethodCallExpression) (Directive, e
 			}
 		}
 	}
-	return &ResourceLabelsDirective{Keys: keys}, nil
+	return &ResourceLabelsDirective{Keys: keys, line: mce.GetLineNumber()}, nil
 }

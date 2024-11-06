@@ -29,6 +29,11 @@ func (s *Shell) AttrNames() []string {
 
 type Shell struct {
 	Command string
+	line    int
+}
+
+func (s *Shell) Line() int {
+	return s.line
 }
 
 func (s *Shell) String() string {
@@ -64,7 +69,7 @@ func MakeShellDirective(mce *parser.MethodCallExpression) (Directive, error) {
 			}
 		}
 		joinedOptions := strings.Join(options, " ")
-		return &Shell{Command: joinedOptions}, nil
+		return &Shell{Command: joinedOptions, line: mce.GetLineNumber()}, nil
 	}
 	return nil, errors.New("invalid Shell directive")
 }

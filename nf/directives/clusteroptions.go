@@ -52,6 +52,11 @@ func (c *ClusterOptions) AttrNames() []string {
 
 type ClusterOptions struct {
 	Options string
+	line    int
+}
+
+func (c *ClusterOptions) Line() int {
+	return c.line
 }
 
 func MakeClusterOptions(mce *parser.MethodCallExpression) (Directive, error) {
@@ -65,7 +70,7 @@ func MakeClusterOptions(mce *parser.MethodCallExpression) (Directive, error) {
 			}
 		}
 		joinedOptions := strings.Join(options, " ")
-		return &ClusterOptions{Options: joinedOptions}, nil
+		return &ClusterOptions{Options: joinedOptions, line: mce.GetLineNumber()}, nil
 	}
 	return nil, errors.New("invalid clusterOptions directive")
 }

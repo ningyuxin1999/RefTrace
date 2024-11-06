@@ -56,6 +56,7 @@ const (
 
 type Directive interface {
 	starlark.Value
+	Line() int
 }
 
 var _ Directive = (*DynamicDirective)(nil)
@@ -77,6 +78,18 @@ func (d *DynamicDirective) AttrNames() []string {
 
 type DynamicDirective struct {
 	Name string
+	line int
+}
+
+func NewDynamicDirective(name string, line int) *DynamicDirective {
+	return &DynamicDirective{
+		Name: name,
+		line: line,
+	}
+}
+
+func (d *DynamicDirective) Line() int {
+	return d.line
 }
 
 func (d *DynamicDirective) String() string {
@@ -120,6 +133,18 @@ func (u *UnknownDirective) AttrNames() []string {
 
 type UnknownDirective struct {
 	Name string
+	line int
+}
+
+func NewUnknownDirective(name string, line int) *UnknownDirective {
+	return &UnknownDirective{
+		Name: name,
+		line: line,
+	}
+}
+
+func (u *UnknownDirective) Line() int {
+	return u.line
 }
 
 func (u *UnknownDirective) String() string {

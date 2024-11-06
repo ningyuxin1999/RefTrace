@@ -51,6 +51,11 @@ func (c *ContainerOptions) AttrNames() []string {
 
 type ContainerOptions struct {
 	Options string
+	line    int
+}
+
+func (c *ContainerOptions) Line() int {
+	return c.line
 }
 
 func MakeContainerOptions(mce *parser.MethodCallExpression) (Directive, error) {
@@ -60,11 +65,11 @@ func MakeContainerOptions(mce *parser.MethodCallExpression) (Directive, error) {
 			if constantExpr, ok := exprs[0].(*parser.ConstantExpression); ok {
 				value := constantExpr.GetValue()
 				if strValue, ok := value.(string); ok {
-					return &ContainerOptions{Options: strValue}, nil
+					return &ContainerOptions{Options: strValue, line: mce.GetLineNumber()}, nil
 				}
 			}
 			if gstringExpr, ok := exprs[0].(*parser.GStringExpression); ok {
-				return &ContainerOptions{Options: gstringExpr.GetText()}, nil
+				return &ContainerOptions{Options: gstringExpr.GetText(), line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

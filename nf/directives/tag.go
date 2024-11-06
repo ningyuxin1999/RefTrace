@@ -27,7 +27,12 @@ func (t *TagDirective) AttrNames() []string {
 }
 
 type TagDirective struct {
-	Tag string
+	Tag  string
+	line int
+}
+
+func (t *TagDirective) Line() int {
+	return t.line
 }
 
 func (t *TagDirective) String() string {
@@ -59,11 +64,11 @@ func MakeTagDirective(mce *parser.MethodCallExpression) (Directive, error) {
 			if constantExpr, ok := exprs[0].(*parser.ConstantExpression); ok {
 				value := constantExpr.GetValue()
 				if strValue, ok := value.(string); ok {
-					return &TagDirective{Tag: strValue}, nil
+					return &TagDirective{Tag: strValue, line: mce.GetLineNumber()}, nil
 				}
 			}
 			if gstringExpr, ok := exprs[0].(*parser.GStringExpression); ok {
-				return &TagDirective{Tag: gstringExpr.GetText()}, nil
+				return &TagDirective{Tag: gstringExpr.GetText(), line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

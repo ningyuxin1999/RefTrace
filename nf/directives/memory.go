@@ -28,6 +28,11 @@ func (m *MemoryDirective) AttrNames() []string {
 
 type MemoryDirective struct {
 	MemoryGB float64
+	line     int
+}
+
+func (m *MemoryDirective) Line() int {
+	return m.line
 }
 
 func (m *MemoryDirective) String() string {
@@ -74,7 +79,7 @@ func MakeMemoryDirective(mce *parser.MethodCallExpression) (Directive, error) {
 				if err != nil {
 					return nil, fmt.Errorf("invalid memory format: %s", strValue)
 				}
-				return convertToMemoryDirective(value, unit)
+				return convertToMemoryDirective(value, unit, mce.GetLineNumber())
 			}
 		}
 
@@ -83,7 +88,7 @@ func MakeMemoryDirective(mce *parser.MethodCallExpression) (Directive, error) {
 			if objExpr, ok := propExpr.GetObjectExpression().(*parser.ConstantExpression); ok {
 				if numValue, ok := objExpr.GetValue().(int); ok {
 					unit := propExpr.GetProperty()
-					return convertToMemoryDirective(float64(numValue), unit.GetText())
+					return convertToMemoryDirective(float64(numValue), unit.GetText(), mce.GetLineNumber())
 				}
 			}
 		}
@@ -91,7 +96,7 @@ func MakeMemoryDirective(mce *parser.MethodCallExpression) (Directive, error) {
 	return nil, errors.New("invalid memory directive")
 }
 
-func convertToMemoryDirective(value float64, unit string) (*MemoryDirective, error) {
+func convertToMemoryDirective(value float64, unit string, line int) (*MemoryDirective, error) {
 	var memoryGB float64
 	switch unit {
 	case "B":
@@ -113,5 +118,5 @@ func convertToMemoryDirective(value float64, unit string) (*MemoryDirective, err
 	default:
 		return nil, fmt.Errorf("unknown memory unit: %s", unit)
 	}
-	return &MemoryDirective{MemoryGB: memoryGB}, nil
+	return &MemoryDirective{MemoryGB: memoryGB, line: line}, nil
 }

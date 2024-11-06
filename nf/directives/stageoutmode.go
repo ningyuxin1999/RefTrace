@@ -28,6 +28,11 @@ func (s *StageOutModeDirective) AttrNames() []string {
 
 type StageOutModeDirective struct {
 	Mode string
+	line int
+}
+
+func (s *StageOutModeDirective) Line() int {
+	return s.line
 }
 
 func (s *StageOutModeDirective) String() string {
@@ -61,7 +66,7 @@ func MakeStageOutModeDirective(mce *parser.MethodCallExpression) (Directive, err
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &StageOutModeDirective{Mode: strValue}, nil
+				return &StageOutModeDirective{Mode: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

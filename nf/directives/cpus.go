@@ -50,7 +50,12 @@ func (c *CpusDirective) AttrNames() []string {
 }
 
 type CpusDirective struct {
-	Num int
+	Num  int
+	line int
+}
+
+func (c *CpusDirective) Line() int {
+	return c.line
 }
 
 func MakeCpusDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -62,7 +67,7 @@ func MakeCpusDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if intValue, ok := constantExpr.GetValue().(int); ok {
-				return &CpusDirective{Num: intValue}, nil
+				return &CpusDirective{Num: intValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

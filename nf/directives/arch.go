@@ -54,6 +54,11 @@ func (a *Arch) Hash() (uint32, error) {
 type Arch struct {
 	Name   string
 	Target string
+	line   int
+}
+
+func (a *Arch) Line() int {
+	return a.line
 }
 
 func MakeArch(mce *parser.MethodCallExpression) (Directive, error) {
@@ -78,7 +83,7 @@ func MakeArch(mce *parser.MethodCallExpression) (Directive, error) {
 		}
 	}
 	if name != "" {
-		return &Arch{Name: name, Target: target}, nil
+		return &Arch{Name: name, Target: target, line: mce.GetLineNumber()}, nil
 	}
 	return nil, errors.New("invalid arch directive")
 }

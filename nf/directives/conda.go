@@ -55,6 +55,11 @@ func (c *Conda) AttrNames() []string {
 
 type Conda struct {
 	PossibleValues []string // List of possible values (e.g., ["bioconda::bcftools=1.14", ""])
+	line           int
+}
+
+func (c *Conda) Line() int {
+	return c.line
 }
 
 func MakeConda(mce *parser.MethodCallExpression) (Directive, error) {
@@ -64,13 +69,13 @@ func MakeConda(mce *parser.MethodCallExpression) (Directive, error) {
 			switch expr := exprs[0].(type) {
 			case *parser.ConstantExpression:
 				if expr.GetText() == "null" {
-					return &Conda{PossibleValues: []string{""}}, nil
+					return &Conda{PossibleValues: []string{""}, line: mce.GetLineNumber()}, nil
 				}
 				if value, ok := expr.GetValue().(string); ok {
-					return &Conda{PossibleValues: []string{value}}, nil
+					return &Conda{PossibleValues: []string{value}, line: mce.GetLineNumber()}, nil
 				}
 			case *parser.GStringExpression:
-				return &Conda{PossibleValues: []string{expr.GetText()}}, nil
+				return &Conda{PossibleValues: []string{expr.GetText()}, line: mce.GetLineNumber()}, nil
 			case *parser.TernaryExpression:
 				var values []string
 
@@ -90,7 +95,7 @@ func MakeConda(mce *parser.MethodCallExpression) (Directive, error) {
 						values = append(values, fv.GetText())
 					}
 				}
-				return &Conda{PossibleValues: values}, nil
+				return &Conda{PossibleValues: values, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

@@ -27,7 +27,12 @@ func (m *MaxErrorsDirective) AttrNames() []string {
 }
 
 type MaxErrorsDirective struct {
-	Num int
+	Num  int
+	line int
+}
+
+func (m *MaxErrorsDirective) Line() int {
+	return m.line
 }
 
 func (m *MaxErrorsDirective) String() string {
@@ -61,7 +66,7 @@ func MakeMaxErrorsDirective(mce *parser.MethodCallExpression) (Directive, error)
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if intValue, ok := constantExpr.GetValue().(int); ok {
-				return &MaxErrorsDirective{Num: intValue}, nil
+				return &MaxErrorsDirective{Num: intValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

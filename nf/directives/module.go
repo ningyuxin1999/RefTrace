@@ -28,6 +28,11 @@ func (m *ModuleDirective) AttrNames() []string {
 
 type ModuleDirective struct {
 	Name string
+	line int
+}
+
+func (m *ModuleDirective) Line() int {
+	return m.line
 }
 
 func (m *ModuleDirective) String() string {
@@ -59,11 +64,11 @@ func MakeModuleDirective(mce *parser.MethodCallExpression) (Directive, error) {
 			if constantExpr, ok := exprs[0].(*parser.ConstantExpression); ok {
 				value := constantExpr.GetValue()
 				if strValue, ok := value.(string); ok {
-					return &ModuleDirective{Name: strValue}, nil
+					return &ModuleDirective{Name: strValue, line: mce.GetLineNumber()}, nil
 				}
 			}
 			if gstringExpr, ok := exprs[0].(*parser.GStringExpression); ok {
-				return &ModuleDirective{Name: gstringExpr.GetText()}, nil
+				return &ModuleDirective{Name: gstringExpr.GetText(), line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

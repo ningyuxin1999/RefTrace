@@ -102,7 +102,7 @@ func makeDirective(statement parser.Statement) (directives.Directive, error) {
 					if _, isClosure := args.GetExpressions()[0].(*parser.ClosureExpression); isClosure {
 						if _, exists := directiveSet[methodName]; exists {
 							if methodName != "executor" && methodName != "label" && methodName != "maxForks" {
-								return &directives.DynamicDirective{Name: methodName}, nil
+								return directives.NewDynamicDirective(methodName, mce.GetLineNumber()), nil
 							}
 						}
 					}
@@ -123,7 +123,7 @@ func makeDirective(statement parser.Statement) (directives.Directive, error) {
 					return nil, fmt.Errorf("too many quotes found when specifying container: %s", args)
 				}
 			}
-			return &directives.UnknownDirective{Name: methodName}, nil
+			return directives.NewUnknownDirective(methodName, mce.GetLineNumber()), nil
 		}
 		if _, ok := expr.(*parser.ConstantExpression); ok {
 			// TODO: revisit this - happens in script tag

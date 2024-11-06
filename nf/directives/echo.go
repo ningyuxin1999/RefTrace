@@ -51,6 +51,11 @@ func (e *EchoDirective) AttrNames() []string {
 
 type EchoDirective struct {
 	Enabled bool
+	line    int
+}
+
+func (e *EchoDirective) Line() int {
+	return e.line
 }
 
 func MakeEchoDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -62,7 +67,7 @@ func MakeEchoDirective(mce *parser.MethodCallExpression) (Directive, error) {
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if boolValue, ok := constantExpr.GetValue().(bool); ok {
-				return &EchoDirective{Enabled: boolValue}, nil
+				return &EchoDirective{Enabled: boolValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}

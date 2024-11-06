@@ -51,6 +51,11 @@ func (e *ExecutorDirective) AttrNames() []string {
 
 type ExecutorDirective struct {
 	Executor string
+	line     int
+}
+
+func (e *ExecutorDirective) Line() int {
+	return e.line
 }
 
 func MakeExecutorDirective(mce *parser.MethodCallExpression) (Directive, error) {
@@ -62,7 +67,7 @@ func MakeExecutorDirective(mce *parser.MethodCallExpression) (Directive, error) 
 		expr := exprs[0]
 		if constantExpr, ok := expr.(*parser.ConstantExpression); ok {
 			if strValue, ok := constantExpr.GetValue().(string); ok {
-				return &ExecutorDirective{Executor: strValue}, nil
+				return &ExecutorDirective{Executor: strValue, line: mce.GetLineNumber()}, nil
 			}
 		}
 	}
