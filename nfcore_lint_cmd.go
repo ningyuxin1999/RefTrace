@@ -22,7 +22,11 @@ func init() {
 }
 
 func runNFCoreLint(cmd *cobra.Command, args []string) {
-	results := corelint.NFCoreLint(dir)
+	results, err := corelint.NFCoreLint(dir)
+	if err != nil {
+		color.New(color.FgRed).Printf("Error: %s\n", err)
+		os.Exit(1)
+	}
 
 	errorPrinter := color.New(color.FgRed)
 	warningPrinter := color.New(color.FgYellow)
@@ -30,29 +34,25 @@ func runNFCoreLint(cmd *cobra.Command, args []string) {
 
 	hasErrors := false
 
-	// Sort warnings by module path
-	sort.Slice(results.Warnings, func(i, j int) bool {
-		return results.Warnings[i].ModulePath < results.Warnings[j].ModulePath
+	// Sort results by module path
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].ModulePath < results[j].ModulePath
 	})
 
-	// Sort errors by module path
-	sort.Slice(results.Errors, func(i, j int) bool {
-		return results.Errors[i].ModulePath < results.Errors[j].ModulePath
-	})
+	// Print warnings and errors for each module
+	for _, result := range results {
+		if len(result.Warnings) > 0 || len(result.Errors) > 0 {
+			fmt.Printf("\nModule: %s\n", result.ModulePath)
+		}
 
-	if len(results.Warnings) > 0 {
-		fmt.Println("\nWarnings:")
-		for _, warning := range results.Warnings {
-			pathPrinter.Printf("  • %s:%d\n", warning.ModulePath, warning.Line)
+		for _, warning := range result.Warnings {
+			pathPrinter.Printf("  • Line %d\n", warning.Line)
 			warningPrinter.Printf("    %s\n", warning.Warning)
 		}
-	}
 
-	if len(results.Errors) > 0 {
-		hasErrors = true
-		fmt.Println("\nErrors:")
-		for _, err := range results.Errors {
-			pathPrinter.Printf("  • %s:%d\n", err.ModulePath, err.Line)
+		for _, err := range result.Errors {
+			hasErrors = true
+			pathPrinter.Printf("  • Line %d\n", err.Line)
 			errorPrinter.Printf("    %s\n", err.Error.Error())
 		}
 	}

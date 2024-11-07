@@ -10,51 +10,65 @@ import (
 	"unicode"
 )
 
-func ruleContainerWithSpace(module *nf.Module) LintResult {
+func ruleContainerWithSpace(module *nf.Module) LintResults {
+	results := LintResults{
+		ModulePath: module.Path,
+		Errors:     []ModuleError{},
+		Warnings:   []ModuleWarning{},
+	}
+
 	for _, process := range module.Processes {
 		for _, directive := range process.Directives {
 			if container, ok := directive.(*directives.Container); ok {
 				names := container.GetNames()
 				for _, name := range names {
 					if strings.Contains(name, " ") {
-						return LintResult{
-							Error: &ModuleError{
-								ModulePath: module.Path,
-								Error:      fmt.Errorf("container name '%s' contains spaces, which is not allowed", container.SimpleName),
-								Line:       container.Line(),
-							},
-						}
+						results.Errors = append(results.Errors, ModuleError{
+							Error: fmt.Errorf("container name '%s' contains spaces, which is not allowed", container.SimpleName),
+							Line:  container.Line(),
+						})
 					}
 				}
 			}
 		}
 	}
-	return LintResult{}
+
+	return results
 }
 
-func ruleMultipleContainers(module *nf.Module) LintResult {
+func ruleMultipleContainers(module *nf.Module) LintResults {
+	results := LintResults{
+		ModulePath: module.Path,
+		Errors:     []ModuleError{},
+		Warnings:   []ModuleWarning{},
+	}
+
 	for _, process := range module.Processes {
 		for _, directive := range process.Directives {
 			if container, ok := directive.(*directives.Container); ok {
 				names := container.GetNames()
 				for _, name := range names {
 					if strings.Contains(name, "biocontainers/") && (strings.Contains(name, "https://containers") || strings.Contains(name, "https://depot")) {
-						return LintResult{
-							Warning: &ModuleWarning{
-								ModulePath: module.Path,
-								Warning:    "Docker and Singularity containers specified on the same line",
-								Line:       container.Line(),
-							},
-						}
+						results.Warnings = append(results.Warnings, ModuleWarning{
+							Warning: "Docker and Singularity containers specified on the same line",
+							Line:    container.Line(),
+						})
 					}
 				}
 			}
 		}
 	}
-	return LintResult{}
+
+	return results
 }
 
-func ruleMustBeTagged(module *nf.Module) LintResult {
+func ruleMustBeTagged(module *nf.Module) LintResults {
+	results := LintResults{
+		ModulePath: module.Path,
+		Errors:     []ModuleError{},
+		Warnings:   []ModuleWarning{},
+	}
+
 	for _, process := range module.Processes {
 		for _, directive := range process.Directives {
 			if container, ok := directive.(*directives.Container); ok {
@@ -64,42 +78,34 @@ func ruleMustBeTagged(module *nf.Module) LintResult {
 					if containerType == "singularity" {
 						_, err := getSingularityTag(name)
 						if err != nil {
-							return LintResult{
-								Error: &ModuleError{
-									ModulePath: module.Path,
-									Error:      err,
-									Line:       container.Line(),
-								},
-							}
+							results.Errors = append(results.Errors, ModuleError{
+								Error: err,
+								Line:  container.Line(),
+							})
 						}
 					}
 					if containerType == "docker" {
 						_, err := getDockerTag(name)
 						if err != nil {
-							return LintResult{
-								Error: &ModuleError{
-									ModulePath: module.Path,
-									Error:      err,
-									Line:       container.Line(),
-								},
-							}
+							results.Errors = append(results.Errors, ModuleError{
+								Error: err,
+								Line:  container.Line(),
+							})
 						}
 						err = quayPrefix(name)
 						if err != nil {
-							return LintResult{
-								Error: &ModuleError{
-									ModulePath: module.Path,
-									Error:      err,
-									Line:       container.Line(),
-								},
-							}
+							results.Errors = append(results.Errors, ModuleError{
+								Error: err,
+								Line:  container.Line(),
+							})
 						}
 					}
 				}
 			}
 		}
 	}
-	return LintResult{}
+
+	return results
 }
 
 func getSingularityTag(containerName string) (string, error) {

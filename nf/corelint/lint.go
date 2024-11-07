@@ -16,63 +16,63 @@ Some of these linting rules could be implemented in user-space (rules.py).
 But they are implemented here to avoid forcing users to define a rules.py
 for common cases.
 */
-func NFCoreLint(directory string) LintResults {
-	results := LintResults{
-		Errors:   make([]ModuleError, 0),
-		Warnings: make([]ModuleWarning, 0),
-	}
+func NFCoreLint(directory string) ([]LintResults, error) {
+	results := []LintResults{}
 
 	modules, err := nf.ProcessDirectory(directory)
 	if err != nil {
-		results.Errors = append(results.Errors, ModuleError{
-			ModulePath: directory,
-			Error:      err,
-		})
-		return results
+		return nil, err
 	}
 
+	// Run all rules and merge their results
 	for _, module := range modules {
-		for _, rule := range moduleRules {
-			result := rule(module)
-			if result.Error != nil {
-				results.Errors = append(results.Errors, *result.Error)
-			}
-			if result.Warning != nil {
-				results.Warnings = append(results.Warnings, *result.Warning)
-			}
+		// Create a moduleResults to collect all rule results for this module
+		moduleResults := LintResults{
+			ModulePath: module.Path,
+			Errors:     make([]ModuleError, 0),
+			Warnings:   make([]ModuleWarning, 0),
 		}
+
+		// Run all rules and merge their results
+		for _, rule := range moduleRules {
+			ruleResult := rule(module)
+			moduleResults.Errors = append(moduleResults.Errors, ruleResult.Errors...)
+			moduleResults.Warnings = append(moduleResults.Warnings, ruleResult.Warnings...)
+		}
+
+		results = append(results, moduleResults)
 	}
-	return results
+
+	return results, nil
 }
 
 // Boilerplate
 
 type ModuleError struct {
-	ModulePath string
-	Error      error
-	Line       int
+	Error error
+	Line  int
 }
 
 type ModuleWarning struct {
-	ModulePath string
-	Warning    string
-	Line       int
+	Warning string
+	Line    int
 }
 
 type LintResults struct {
-	Errors   []ModuleError
-	Warnings []ModuleWarning
+	ModulePath string
+	Errors     []ModuleError
+	Warnings   []ModuleWarning
 }
 
-type LintResult struct {
-	Error   *ModuleError
-	Warning *ModuleWarning
-}
-
-type ModuleRule func(*nf.Module) LintResult
+type ModuleRule func(*nf.Module) LintResults
 
 var moduleRules []ModuleRule
 
 func init() {
-	moduleRules = []ModuleRule{ruleContainerWithSpace, ruleMultipleContainers, ruleMustBeTagged}
+	moduleRules = []ModuleRule{
+		ruleContainerWithSpace,
+		ruleMultipleContainers,
+		ruleMustBeTagged,
+		ruleAlphanumerics,
+	}
 }

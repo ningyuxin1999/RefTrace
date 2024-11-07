@@ -42,17 +42,17 @@ process FOO {
 	}
 
 	// Run the container space check
-	result := ruleContainerWithSpace(module)
-	if result.Error == nil {
+	results := ruleContainerWithSpace(module)
+	if len(results.Errors) == 0 {
 		t.Fatal("Expected error due to space in container name, but got none")
 	}
 
 	expectedError := "container name 'ubuntu latest' contains spaces, which is not allowed"
-	if result.Error.Error.Error() != expectedError {
-		t.Errorf("Expected error message %q but got %q", expectedError, result.Error.Error.Error())
+	if results.Errors[0].Error.Error() != expectedError {
+		t.Errorf("Expected error message %q but got %q", expectedError, results.Errors[0].Error.Error())
 	}
-	if result.Error.ModulePath != processFile {
-		t.Errorf("Expected module path %q but got %q", processFile, result.Error.ModulePath)
+	if results.ModulePath != processFile {
+		t.Errorf("Expected module path %q but got %q", processFile, results.ModulePath)
 	}
 }
 
@@ -89,12 +89,12 @@ process FOO {
 	}
 
 	// Run the container space check
-	result := ruleContainerWithSpace(module)
-	if result.Error != nil {
-		t.Errorf("Expected no error for valid container name, but got: %v", result.Error.Error)
+	results := ruleContainerWithSpace(module)
+	if len(results.Errors) > 0 {
+		t.Errorf("Expected no errors for valid container name, but got: %v", results.Errors[0].Error)
 	}
-	if result.Warning != nil {
-		t.Errorf("Expected no warning for valid container name, but got: %v", result.Warning.Warning)
+	if len(results.Warnings) > 0 {
+		t.Errorf("Expected no warnings for valid container name, but got: %v", results.Warnings[0].Warning)
 	}
 }
 
@@ -169,12 +169,12 @@ process FOO {
 	}
 
 	// Run the container space check
-	result := ruleContainerWithSpace(module)
-	if result.Error != nil {
-		t.Errorf("Expected no error for valid ternary container names, but got: %v", result.Error.Error)
+	results := ruleContainerWithSpace(module)
+	if len(results.Errors) > 0 {
+		t.Errorf("Expected no error for valid ternary container names, but got: %v", results.Errors[0].Error)
 	}
-	if result.Warning != nil {
-		t.Errorf("Expected no warning for valid ternary container names, but got: %v", result.Warning.Warning)
+	if len(results.Warnings) > 0 {
+		t.Errorf("Expected no warning for valid ternary container names, but got: %v", results.Warnings[0].Warning)
 	}
 }
 
@@ -211,12 +211,12 @@ process FOO {
 	}
 
 	// Run the container space check
-	result := ruleContainerWithSpace(module)
-	if result.Error != nil {
-		t.Errorf("Expected no error for container without spaces, but got: %v", result.Error.Error)
+	results := ruleContainerWithSpace(module)
+	if len(results.Errors) > 0 {
+		t.Errorf("Expected no error for container without spaces, but got: %v", results.Errors[0].Error)
 	}
-	if result.Warning != nil {
-		t.Errorf("Expected no warning for container without spaces, but got: %v", result.Warning.Warning)
+	if len(results.Warnings) > 0 {
+		t.Errorf("Expected no warning for container without spaces, but got: %v", results.Warnings[0].Warning)
 	}
 }
 
@@ -244,17 +244,17 @@ process FOO {
 	}
 
 	// Run the multiple containers check
-	result := ruleMultipleContainers(module)
-	if result.Warning == nil {
+	results := ruleMultipleContainers(module)
+	if len(results.Warnings) == 0 {
 		t.Fatal("Expected warning for mixed container syntax, but got none")
 	}
 
 	expectedWarning := "Docker and Singularity containers specified on the same line"
-	if result.Warning.Warning != expectedWarning {
-		t.Errorf("Expected warning message %q but got %q", expectedWarning, result.Warning.Warning)
+	if results.Warnings[0].Warning != expectedWarning {
+		t.Errorf("Expected warning message %q but got %q", expectedWarning, results.Warnings[0].Warning)
 	}
-	if result.Warning.ModulePath != processFile {
-		t.Errorf("Expected module path %q but got %q", processFile, result.Warning.ModulePath)
+	if results.ModulePath != processFile {
+		t.Errorf("Expected module path %q but got %q", processFile, results.ModulePath)
 	}
 }
 
