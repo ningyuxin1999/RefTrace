@@ -142,7 +142,9 @@ See the [example linting rules](example_linting_rules) directory. See the [API r
 
 ## Building
 
-You need Go.
+You need Go. You also need Java to run ANTLR.  
+You do not need Java to run the built binary.
+Download ANTLR from [here](https://www.antlr.org/download/antlr-4.13.1-complete.jar) and put it in the `parser` directory.
 
 ```
 go generate ./...

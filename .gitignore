@@ -13,3 +13,4 @@ reft-mac-m1
 nf/__debug*
 releases/*
 coverage.out
+parser/antlr-4.13.1-complete.jar
