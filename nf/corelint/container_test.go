@@ -9,7 +9,7 @@ import (
 	"reft-go/nf"
 )
 
-func TestruleContainerWithSpace(t *testing.T) {
+func TestRuleContainerWithSpace(t *testing.T) {
 	processContent := `
 process FOO {
     container 'ubuntu latest'  // Invalid container name with space
@@ -255,5 +255,52 @@ process FOO {
 	}
 	if result.Warning.ModulePath != processFile {
 		t.Errorf("Expected module path %q but got %q", processFile, result.Warning.ModulePath)
+	}
+}
+
+func TestSingularityContainerTags(t *testing.T) {
+	testCases := []struct {
+		name          string
+		containerURL  string
+		expectedTag   string
+		shouldSucceed bool
+	}{
+		{
+			name:          "biocontainers URL with version",
+			containerURL:  "https://containers.biocontainers.pro/s3/SingImgsRepo/biocontainers/v1.2.0_cv1/biocontainers_v1.2.0_cv1.img",
+			expectedTag:   "v1.2.0_cv1",
+			shouldSucceed: true,
+		},
+		{
+			name:          "galaxy depot URL with version",
+			containerURL:  "https://depot.galaxyproject.org/singularity/fastqc:0.11.9--0",
+			expectedTag:   "0.11.9--0",
+			shouldSucceed: true,
+		},
+		{
+			name:          "invalid URL without tag",
+			containerURL:  "https://depot.galaxyproject.org/singularity/fastqc",
+			expectedTag:   "",
+			shouldSucceed: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tag, err := getSingularityTag(tc.containerURL)
+
+			if tc.shouldSucceed {
+				if err != nil {
+					t.Errorf("Expected success but got error: %v", err)
+				}
+				if tag != tc.expectedTag {
+					t.Errorf("Expected tag %q but got %q", tc.expectedTag, tag)
+				}
+			} else {
+				if err == nil {
+					t.Error("Expected error but got success")
+				}
+			}
+		})
 	}
 }

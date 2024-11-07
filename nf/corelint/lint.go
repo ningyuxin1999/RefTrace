@@ -1,11 +1,7 @@
 package corelint
 
 import (
-	"fmt"
-	"net/url"
 	"reft-go/nf"
-	"reft-go/nf/directives"
-	"strings"
 )
 
 /*
@@ -78,73 +74,5 @@ type ModuleRule func(*nf.Module) LintResult
 var moduleRules []ModuleRule
 
 func init() {
-	moduleRules = []ModuleRule{ruleContainerWithSpace, ruleMultipleContainers}
-}
-
-// Rules
-
-func ruleContainerWithSpace(module *nf.Module) LintResult {
-	for _, process := range module.Processes {
-		for _, directive := range process.Directives {
-			if container, ok := directive.(*directives.Container); ok {
-				names := container.GetNames()
-				for _, name := range names {
-					if strings.Contains(name, " ") {
-						return LintResult{
-							Error: &ModuleError{
-								ModulePath: module.Path,
-								Error:      fmt.Errorf("container name '%s' contains spaces, which is not allowed", container.SimpleName),
-								Line:       container.Line(),
-							},
-						}
-					}
-				}
-			}
-		}
-	}
-	return LintResult{}
-}
-
-func ruleMultipleContainers(module *nf.Module) LintResult {
-	for _, process := range module.Processes {
-		for _, directive := range process.Directives {
-			if container, ok := directive.(*directives.Container); ok {
-				names := container.GetNames()
-				for _, name := range names {
-					if strings.Contains(name, "biocontainers/") && (strings.Contains(name, "https://containers") || strings.Contains(name, "https://depot")) {
-						return LintResult{
-							Warning: &ModuleWarning{
-								ModulePath: module.Path,
-								Warning:    "Docker and Singularity containers specified on the same line",
-								Line:       container.Line(),
-							},
-						}
-					}
-				}
-			}
-		}
-	}
-	return LintResult{}
-}
-
-func dockerOrSingularity(containerName string) string {
-	// Check for Singularity container URLs
-	if strings.HasPrefix(containerName, "https://") || strings.HasPrefix(containerName, "https://depot") {
-		// Try parsing as URL to validate
-		_, err := url.Parse(containerName)
-		if err == nil {
-			return "singularity"
-		}
-		return ""
-	}
-
-	// Check for Docker container format (org/image:tag)
-	if strings.Count(containerName, "/") >= 1 &&
-		strings.Count(containerName, ":") == 1 &&
-		strings.Count(containerName, " ") == 0 &&
-		!strings.Contains(containerName, "https://") {
-		return "docker"
-	}
-
-	return ""
+	moduleRules = []ModuleRule{ruleContainerWithSpace, ruleMultipleContainers, ruleMustBeTagged}
 }
