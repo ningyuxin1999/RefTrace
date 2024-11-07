@@ -118,13 +118,13 @@ func getSingularityTag(containerName string) (string, error) {
 	// Parse the URL
 	parsedURL, err := url.Parse(containerName)
 	if err != nil {
-		return "", fmt.Errorf("invalid container URL: %v", err)
+		return "", fmt.Errorf("invalid container URL '%s': %v", containerName, err)
 	}
 
 	// Get the last segment of the path
 	lastSegment := path.Base(parsedURL.Path)
 	if lastSegment == "." || lastSegment == "/" {
-		return "", fmt.Errorf("invalid container URL: no path segments")
+		return "", fmt.Errorf("invalid container URL '%s': no path segments", containerName)
 	}
 
 	lastSegment = strings.TrimSuffix(lastSegment, ".img")
@@ -148,7 +148,7 @@ func getSingularityTag(containerName string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("singularity container must specify a tag")
+	return "", fmt.Errorf("singularity container '%s' must specify a tag", containerName)
 }
 
 // Helper function to validate the tag against allowed characters
@@ -172,16 +172,16 @@ func getDockerTag(containerName string) (string, error) {
 	if idx := strings.LastIndex(containerName, ":"); idx != -1 {
 		tag := containerName[idx+1:]
 		if !isValidTag(tag) {
-			return "", fmt.Errorf("invalid docker tag format")
+			return "", fmt.Errorf("invalid docker tag format for container '%s'", containerName)
 		}
 		return tag, nil
 	}
-	return "", fmt.Errorf("docker container must specify a tag")
+	return "", fmt.Errorf("docker container '%s' must specify a tag", containerName)
 }
 
 func quayPrefix(containerName string) error {
 	if strings.HasPrefix(containerName, "quay.io") {
-		return fmt.Errorf("please use 'organisation/container:tag' format instead of full registry URL")
+		return fmt.Errorf("container '%s': please use 'organization/container:tag' format instead of full registry URL", containerName)
 	}
 	return nil
 }
@@ -194,7 +194,7 @@ func dockerOrSingularity(containerName string) (string, error) {
 		if err == nil {
 			return "singularity", nil
 		}
-		return "", fmt.Errorf("invalid singularity container URL")
+		return "", fmt.Errorf("invalid singularity container URL '%s'", containerName)
 	}
 
 	// Check for Docker container format (org/image:tag)
@@ -205,5 +205,10 @@ func dockerOrSingularity(containerName string) (string, error) {
 		return "docker", nil
 	}
 
-	return "", fmt.Errorf("unknown container type")
+	if strings.Count(containerName, ":") == 1 {
+		// e.g. ubuntu:latest
+		return "docker", nil
+	}
+
+	return "", fmt.Errorf("unknown container type '%s'", containerName)
 }

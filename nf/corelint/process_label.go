@@ -43,8 +43,12 @@ func ruleConflictingLabels(module *nf.Module) LintResults {
 			}
 		}
 		if len(goodLabels) > 1 {
+			labelNames := make([]string, len(goodLabels))
+			for i, label := range goodLabels {
+				labelNames[i] = label.Label
+			}
 			results.Warnings = append(results.Warnings, ModuleWarning{
-				Warning: fmt.Sprintf("process '%s' has conflicting labels: %v", process.Name, goodLabels),
+				Warning: fmt.Sprintf("process '%s' has conflicting labels: %v", process.Name, labelNames),
 				Line:    goodLabels[len(goodLabels)-1].Line(),
 			})
 		}
@@ -95,8 +99,12 @@ func ruleNonStandardLabel(module *nf.Module) LintResults {
 			}
 		}
 		if len(badLabels) > 0 {
+			labelNames := make([]string, len(badLabels))
+			for i, label := range badLabels {
+				labelNames[i] = label.Label
+			}
 			results.Warnings = append(results.Warnings, ModuleWarning{
-				Warning: fmt.Sprintf("process '%s' has non-standard labels: %v", process.Name, badLabels),
+				Warning: fmt.Sprintf("process '%s' has non-standard labels: %v", process.Name, labelNames),
 				Line:    badLabels[0].Line(),
 			})
 		}

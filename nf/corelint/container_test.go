@@ -341,7 +341,7 @@ process FOO {
 		"docker container missing tag",
 		processContent,
 		1,
-		[]string{"docker container must specify a tag"},
+		[]string{"docker container 'biocontainers/fastqc' must specify a tag"},
 	)
 }
 
@@ -354,7 +354,7 @@ process FOO {
 		"singularity container missing tag",
 		processContent,
 		1,
-		[]string{"singularity container must specify a tag"},
+		[]string{"singularity container 'https://depot.galaxyproject.org/singularity/fastqc' must specify a tag"},
 	)
 }
 
@@ -368,8 +368,8 @@ process FOO {
 		processContent,
 		2,
 		[]string{
-			"docker container must specify a tag",
-			"please use 'organisation/container:tag' format instead of full registry URL",
+			"docker container 'quay.io/biocontainers/fastqc' must specify a tag",
+			"container 'quay.io/biocontainers/fastqc': please use 'organization/container:tag' format instead of full registry URL",
 		},
 	)
 }
@@ -385,7 +385,10 @@ process FOO {
 		"multiple containers with ternary",
 		processContent,
 		2,
-		[]string{"container must specify a tag"},
+		[]string{
+			"singularity container 'https://depot.galaxyproject.org/singularity/fastqc' must specify a tag",
+			"docker container 'biocontainers/fastqc' must specify a tag",
+		},
 	)
 }
 
@@ -487,8 +490,8 @@ process FOO {
 	if err == nil {
 		t.Error("Expected error for unknown container type, but got none")
 	}
-	if err.Error() != "unknown container type" {
-		t.Errorf("Expected error message 'unknown container type' but got %q", err.Error())
+	if err.Error() != "unknown container type 'just-a-name'" {
+		t.Errorf("Expected error message 'unknown container type 'just-a-name'' but got %q", err.Error())
 	}
 }
 
@@ -525,8 +528,8 @@ process FOO {
 	if err == nil {
 		t.Error("Expected error for invalid Singularity URL, but got none")
 	}
-	if err.Error() != "invalid singularity container URL" {
-		t.Errorf("Expected error message 'invalid singularity container URL' but got %q", err.Error())
+	if err.Error() != "invalid singularity container URL 'https://[invalid-url'" {
+		t.Errorf("Expected error message 'invalid singularity container URL 'https://[invalid-url'' but got %q", err.Error())
 	}
 }
 
@@ -539,17 +542,17 @@ func TestInvalidDockerTagFormat(t *testing.T) {
 		{
 			name:          "invalid characters",
 			containerName: "biocontainers/fastqc:1.0$",
-			wantErr:       "invalid docker tag format",
+			wantErr:       "invalid docker tag format for container 'biocontainers/fastqc:1.0$'",
 		},
 		{
 			name:          "empty tag",
 			containerName: "biocontainers/fastqc:",
-			wantErr:       "invalid docker tag format",
+			wantErr:       "invalid docker tag format for container 'biocontainers/fastqc:'",
 		},
 		{
 			name:          "space in tag",
 			containerName: "biocontainers/fastqc:1.0 2",
-			wantErr:       "invalid docker tag format",
+			wantErr:       "invalid docker tag format for container 'biocontainers/fastqc:1.0 2'",
 		},
 		{
 			name:          "valid tag",
@@ -590,22 +593,22 @@ func TestGetSingularityTag(t *testing.T) {
 		{
 			name:          "invalid URL format",
 			containerURL:  "https://example.com/%ZZ",
-			expectedError: "invalid container URL: parse",
+			expectedError: "invalid container URL 'https://example.com/%ZZ': parse \"https://example.com/%ZZ\": invalid URL escape \"%ZZ\"",
 		},
 		{
 			name:          "URL with no path",
 			containerURL:  "https://example.com",
-			expectedError: "invalid container URL: no path segments",
+			expectedError: "invalid container URL 'https://example.com': no path segments",
 		},
 		{
 			name:          "URL ending in slash",
 			containerURL:  "https://example.com/",
-			expectedError: "invalid container URL: no path segments",
+			expectedError: "invalid container URL 'https://example.com/': no path segments",
 		},
 		{
 			name:          "URL with dot",
 			containerURL:  "https://example.com/.",
-			expectedError: "invalid container URL: no path segments",
+			expectedError: "invalid container URL 'https://example.com/.': no path segments",
 		},
 		{
 			name:          "valid URL with colon tag",

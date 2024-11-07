@@ -15,7 +15,24 @@ See https://reftrace.com and [📺 Watch a 2 minute tutorial](https://customer-r
 - Avoid parsing the Nextflow DSL.
 - Deploy as a static binary.
 
-### Example Rule
+## NF Core Linting Rules
+
+![NF Core Linting Demo](demo/nfcore_lint.gif)
+
+```
+reft lint nfcore
+```
+This runs a pre-defined set of linting rules that check for common issues in NF Core pipelines.
+No `rules.py` file is required.  
+No network access is required by default.  
+No files are changed by default.
+
+### Built-in Rules
+
+- Check process labels
+- Check container URLs
+
+## Example Custom Rule
 
 ```python
 # This file should exist in the root of your pipeline directory
@@ -147,6 +164,18 @@ go get <package>
 go mod vendor
 git restore vendor/github.com/antlr4-go/antlr/v4/lexer.go  # dependency we patched
 ```
+
+## Adding NF Core Linting Rules
+
+The code is in the [nf/corelint](nf/corelint) directory. The entrypoint is [nf/corelint/lint.go](nf/corelint/lint.go).
+
+### Run the NF Core Linting Rules Tests With Coverage
+
+```
+go test -coverprofile=coverage.out ./nf/corelint
+go tool cover -html=coverage.out
+```
+This will run the tests and open the coverage report in your browser.
 
 ## Limitations
 
