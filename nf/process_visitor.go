@@ -17,6 +17,11 @@ type Process struct {
 	Directives []directives.Directive
 	Closure    *parser.ClosureExpression
 	Errors     []error
+	line       int
+}
+
+func (p *Process) Line() int {
+	return p.line
 }
 
 type ProcessVisitor struct {
@@ -159,6 +164,7 @@ func makeProcess(name string, closure *parser.ClosureExpression) Process {
 		Directives: visitor.directives,
 		Closure:    closure,
 		Errors:     visitor.errors,
+		line:       closure.GetLineNumber(),
 	}
 }
 

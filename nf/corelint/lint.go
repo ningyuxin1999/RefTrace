@@ -74,5 +74,10 @@ func init() {
 		ruleMultipleContainers,
 		ruleMustBeTagged,
 		ruleAlphanumerics,
+		ruleConflictingLabels,
+		ruleNoStandardLabel,
+		ruleNonStandardLabel,
+		ruleDuplicateLabels,
+		ruleNoLabels,
 	}
 }

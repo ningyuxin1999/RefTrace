@@ -74,7 +74,13 @@ func ruleMustBeTagged(module *nf.Module) LintResults {
 			if container, ok := directive.(*directives.Container); ok {
 				names := container.GetNames()
 				for _, name := range names {
-					containerType := dockerOrSingularity(name)
+					containerType, err := dockerOrSingularity(name)
+					if err != nil {
+						results.Errors = append(results.Errors, ModuleError{
+							Error: err,
+							Line:  container.Line(),
+						})
+					}
 					if containerType == "singularity" {
 						_, err := getSingularityTag(name)
 						if err != nil {
@@ -142,7 +148,7 @@ func getSingularityTag(containerName string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("unsupported singularity container URL format")
+	return "", fmt.Errorf("singularity container must specify a tag")
 }
 
 // Helper function to validate the tag against allowed characters
@@ -170,7 +176,7 @@ func getDockerTag(containerName string) (string, error) {
 		}
 		return tag, nil
 	}
-	return "", fmt.Errorf("no docker tag found")
+	return "", fmt.Errorf("docker container must specify a tag")
 }
 
 func quayPrefix(containerName string) error {
@@ -180,24 +186,24 @@ func quayPrefix(containerName string) error {
 	return nil
 }
 
-func dockerOrSingularity(containerName string) string {
+func dockerOrSingularity(containerName string) (string, error) {
 	// Check for Singularity container URLs
 	if strings.HasPrefix(containerName, "https://") || strings.HasPrefix(containerName, "https://depot") {
 		// Try parsing as URL to validate
 		_, err := url.Parse(containerName)
 		if err == nil {
-			return "singularity"
+			return "singularity", nil
 		}
-		return ""
+		return "", fmt.Errorf("invalid singularity container URL")
 	}
 
 	// Check for Docker container format (org/image:tag)
-	if strings.Count(containerName, "/") >= 1 &&
-		strings.Count(containerName, ":") == 1 &&
-		strings.Count(containerName, " ") == 0 &&
-		!strings.Contains(containerName, "https://") {
-		return "docker"
+	// we don't do the full checks from the python version
+	// here as we prefer to catch malformed container names in
+	// the rule that checks for tagged containers
+	if strings.Count(containerName, "/") >= 1 {
+		return "docker", nil
 	}
 
-	return ""
+	return "", fmt.Errorf("unknown container type")
 }
