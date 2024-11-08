@@ -110,6 +110,10 @@ func NewIncludeVisitor() *IncludeVisitor {
 	}
 }
 
+func (v *IncludeVisitor) Includes() []IncludeStatement {
+	return v.includes
+}
+
 // Statements
 func (v *IncludeVisitor) VisitBlockStatement(block *parser.BlockStatement) {
 	for _, statement := range block.GetStatements() {

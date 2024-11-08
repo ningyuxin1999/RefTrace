@@ -15,6 +15,12 @@ See https://reftrace.com and [📺 Watch a 2 minute tutorial](https://customer-r
 - Avoid parsing the Nextflow DSL.
 - Deploy as a static binary.
 
+## Use From Python
+
+RefTrace can be built as a native, shared library and used from vanilla CPython.
+
+See [PYTHON.md](PYTHON.md).
+
 ## NF Core Linting Rules
 
 ![NF Core Linting Demo](demo/nfcore_lint.gif)

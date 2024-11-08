@@ -28,6 +28,10 @@ type ProcessVisitor struct {
 	processes []Process
 }
 
+func (v *ProcessVisitor) Processes() []Process {
+	return v.processes
+}
+
 func NewProcessVisitor() *ProcessVisitor {
 	return &ProcessVisitor{
 		processes: []Process{},
