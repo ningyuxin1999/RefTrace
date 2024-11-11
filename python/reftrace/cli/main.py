@@ -3,33 +3,11 @@ import click
 import os
 import importlib.util
 import sys
-from dataclasses import dataclass
-from typing import List, Callable
 from pathlib import Path
+from typing import List, Callable
 
 from reftrace import Module
-
-registered_rules = []
-
-def register_rule(func: Callable):
-    registered_rules.append(func)
-    return func  # Return the function unmodified
-
-@dataclass
-class ModuleError:
-    line: int
-    error: str
-
-@dataclass
-class ModuleWarning:
-    line: int
-    warning: str
-
-@dataclass
-class LintResults:
-    module_path: str
-    errors: List[ModuleError]
-    warnings: List[ModuleWarning]
+from reftrace.linting import ModuleError, ModuleWarning, LintResults, rule
 
 def load_rules(rules_file: str = "rules.py") -> List[Callable]:
     """Load rules from rules.py using the decorator"""
@@ -37,7 +15,6 @@ def load_rules(rules_file: str = "rules.py") -> List[Callable]:
         click.secho(f"No {rules_file} found in current directory", fg="red")
         sys.exit(1)
 
-    # Prepare the module spec and inject necessary attributes
     spec = importlib.util.spec_from_file_location("rules", rules_file)
     rules_module = importlib.util.module_from_spec(spec)
 
@@ -46,14 +23,21 @@ def load_rules(rules_file: str = "rules.py") -> List[Callable]:
     rules_module.ModuleError = ModuleError
     rules_module.ModuleWarning = ModuleWarning
     rules_module.LintResults = LintResults
-    rules_module.register_rule = register_rule
+    rules_module.rule = rule
 
     spec.loader.exec_module(rules_module)
 
-    if not registered_rules:
+    # Find all functions decorated with @rule
+    rules = []
+    for name in dir(rules_module):
+        obj = getattr(rules_module, name)
+        if callable(obj) and hasattr(obj, '__wrapped__'):
+            rules.append(obj)
+
+    if not rules:
         click.secho(f"No rules registered in {rules_file}", fg="yellow")
 
-    return registered_rules
+    return rules
 
 def find_nf_files(directory: str) -> List[str]:
     """Recursively find all .nf files in directory"""
