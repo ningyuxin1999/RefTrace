@@ -1,5 +1,8 @@
 # Using From Python
 
+This API is a low level API that allows you to access the Nextflow DSL from Python.
+It does parsing of the DSL. It's intended to be consumed by other tools.
+
 ## Example
 
 ```python
@@ -18,11 +21,20 @@ for process in module.processes:
             print(f"  Container: {directive.condition} ? {directive.true_name} : {directive.false_name}")
 ```
 
-You can access the python module by running `python` from the root of the RefTrace repo.  
-You need to first build the shared library.
+## API Docs
 
-## Building the shared library
+See [docs/reftrace.md](docs/reftrace.md).
 
-```
-go build -buildmode=c-shared -mod=vendor -o reftrace/libreftrace.so reft-go/reftrace
-```
+## Building
+
+It's not yet published to PyPI.
+
+You can build it and run the tests by running `make test-python`.
+
+## Development
+
+Source is at [python/reftrace](python/reftrace). These are Python bindings to the Go shared library via the C FFI. Functionality is exposed on the Go side in [pkg/capi](pkg/capi).
+
+There are tests.
+
+The native Go parser is [tested](README.md#testing). The C FFI-specific part is tested at [capi_test.go](pkg/capi/capi_test.go). The Python bindings are tested at [test_module.py](python/tests/test_module.py).
