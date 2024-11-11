@@ -1,6 +1,6 @@
-from .module import Module
-from .process import Process
-from .container import Container
-from .label import Label
+from .bindings.module import Module
+from .bindings.process import Process
+from .bindings.container import Container
+from .bindings.label import Label
 
 __all__ = ['Module', 'Process', 'Container', 'Label']

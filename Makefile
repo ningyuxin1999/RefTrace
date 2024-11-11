@@ -1,12 +1,12 @@
 .PHONY: build test clean lib venv
 
 # Main targets
-build: lib build-go build-python
+build: lib build-python
 
 # Build the shared library
 lib:
 	go build -buildmode=c-shared \
-		-o python/reftrace/libreftrace.so \
+		-o python/reftrace/bindings/libreftrace.so \
 		./pkg/capi
 
 # Build the CLI tool
@@ -15,8 +15,10 @@ build-go:
 
 # Build the Python package
 build-python: lib
-	python -m pip install --upgrade pip build
-	cd python && python -m build
+	python3 -m venv build-venv
+	. build-venv/bin/activate && python3 -m pip install --upgrade pip build
+	. build-venv/bin/activate && cd python && python3 -m build
+	rm -rf build-venv
 
 test: test-go test-python
 
@@ -24,21 +26,24 @@ test-go:
 	go test ./...
 
 test-python: venv
-	. venv/bin/activate && cd python && python -m pytest
+	. venv/bin/activate && cd python && python3 -m pytest
 
 # doesn't rebuild the venv
 test-python-quick:
-	. venv/bin/activate && cd python && python -m pytest
+	. venv/bin/activate && cd python && python3 -m pytest
 
 venv: build
-	python -m venv venv
+	python3 -m venv venv
 	. venv/bin/activate && pip install python/dist/reftrace-0.4.0-py3-none-any.whl
 	. venv/bin/activate && pip install pytest
 
-clean: clean-venv
+clean: clean-venv clean-build-env
 
 clean-venv:
 	rm -rf venv
 	rm -rf build dist *.egg-info
 	rm -f python/reftrace/libreftrace.so
 	go clean
+
+clean-build-env:
+	rm -rf build-venv
