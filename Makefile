@@ -1,24 +1,44 @@
-# Binary name
-BINARY_NAME=reft
+.PHONY: build test clean lib venv
 
-# Go build command
-GOBUILD=go build
+# Main targets
+build: lib build-go build-python
 
-# Build flags
-BUILD_FLAGS=-ldflags="-s -w"
+# Build the shared library
+lib:
+	go build -buildmode=c-shared \
+		-o python/reftrace/libreftrace.so \
+		./pkg/capi
 
-# Targets
-.PHONY: all build clean linux mac
+# Build the CLI tool
+build-go:
+	go build ./cmd/reftrace
 
-all: linux mac
+# Build the Python package
+build-python: lib
+	python -m pip install --upgrade pip build
+	cd python && python -m build
 
-build: all
+test: test-go test-python
 
-linux:
-	GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-linux-x86_64
+test-go:
+	go test ./...
 
-mac:
-	GOOS=darwin GOARCH=arm64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-mac-m1
+test-python: venv
+	. venv/bin/activate && cd python && python -m pytest
 
-clean:
-	rm -f $(BINARY_NAME)-linux-x86_64 $(BINARY_NAME)-mac-m1
+# doesn't rebuild the venv
+test-python-quick:
+	. venv/bin/activate && cd python && python -m pytest
+
+venv: build
+	python -m venv venv
+	. venv/bin/activate && pip install python/dist/reftrace-0.4.0-py3-none-any.whl
+	. venv/bin/activate && pip install pytest
+
+clean: clean-venv
+
+clean-venv:
+	rm -rf venv
+	rm -rf build dist *.egg-info
+	rm -f python/reftrace/libreftrace.so
+	go clean

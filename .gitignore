@@ -14,8 +14,10 @@ nf/__debug*
 releases/*
 coverage.out
 parser/antlr-4.13.1-complete.jar
-reftrace/libreftrace.h
-reftrace/libreftrace.so
-reftrace/__pycache__/
-reftrace/lib/__pycache__/
+python/reftrace/libreftrace.h
+python/reftrace/libreftrace.so
+python/reftrace/__pycache__/
+python/tests/__pycache__/
 venv/
+python/dist
+python/reftrace.egg-info/

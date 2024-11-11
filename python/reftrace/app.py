@@ -1,11 +1,23 @@
 import os
+import sys
 import ctypes
 from ctypes import c_char_p, c_int, c_ulonglong, c_void_p
 from typing import Optional
 
+def load_library():
+    _lib_dir = os.path.dirname(os.path.abspath(__file__))
+    _lib_path = os.path.join(_lib_dir, 'libreftrace.so')
+    
+    if not os.path.exists(_lib_path):
+        raise RuntimeError(f"Library not found at {_lib_path}")
+        
+    try:
+        return ctypes.CDLL(_lib_path)
+    except OSError as e:
+        raise RuntimeError(f"Failed to load library: {e}") from e
+
 # Load the shared library
-_lib_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_lib = ctypes.CDLL(os.path.join(_lib_dir, 'libreftrace.so'))
+_lib = load_library()
 
 # Module function signatures
 class ModuleNewResult(ctypes.Structure):

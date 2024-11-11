@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reftrace"
+version = "0.4.0"
+description = "Code analysis for bioinformatics pipelines"
+requires-python = ">=3.8"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Andrew Stiles", email = "andrew@reftrace.com"},
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+]
+
+[tool.setuptools]
+packages = ["reftrace"]
+
+[tool.setuptools.package-data]
+reftrace = ["reftrace/libreftrace.so"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
