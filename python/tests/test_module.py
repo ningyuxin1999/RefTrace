@@ -44,7 +44,7 @@ process CAT_FASTQ {
         assert process.name == "CAT_FASTQ"
         
         # Check container directive
-        containers = [d for d in process.directives if d.format == "ternary"]
+        containers = [d for d in process.containers if d.format == "ternary"]
         assert len(containers) == 1
         container = containers[0]
         

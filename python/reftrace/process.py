@@ -17,7 +17,7 @@ class Process:
         return ""
 
     @property
-    def directives(self) -> list[Container]:
+    def containers(self) -> list[Container]:
         count = _lib.Process_GetDirectiveCount(self._handle)
         result = []
         for i in range(count):
