@@ -58,6 +58,12 @@ _lib.Container_GetTrueName.restype = c_char_p
 _lib.Container_GetFalseName.argtypes = [c_ulonglong]
 _lib.Container_GetFalseName.restype = c_char_p
 
+# Label function signatures
+_lib.Directive_IsLabel.argtypes = [c_ulonglong]
+_lib.Directive_IsLabel.restype = c_int
+_lib.Label_GetValue.argtypes = [c_ulonglong]
+_lib.Label_GetValue.restype = c_char_p
+
 # Add free function signature
 _lib.free.argtypes = [c_void_p]
 

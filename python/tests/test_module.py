@@ -52,3 +52,9 @@ process CAT_FASTQ {
         assert container.condition == "((workflow.containerEngine == singularity) && !(task.ext.singularity_pull_docker_container))"
         assert container.true_name == "https://depot.galaxyproject.org/singularity/ubuntu:20.04"
         assert container.false_name == "nf-core/ubuntu:20.04"
+        
+        # Add label directive testing
+        labels = [d for d in process.labels]
+        assert len(labels) == 1
+        label = labels[0]
+        assert label.value == "process_single"
