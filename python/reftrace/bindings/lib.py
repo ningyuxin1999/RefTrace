@@ -57,12 +57,16 @@ _lib.Container_GetTrueName.argtypes = [c_ulonglong]
 _lib.Container_GetTrueName.restype = c_char_p
 _lib.Container_GetFalseName.argtypes = [c_ulonglong]
 _lib.Container_GetFalseName.restype = c_char_p
+_lib.Container_GetLine.argtypes = [c_ulonglong]
+_lib.Container_GetLine.restype = c_int
 
 # Label function signatures
 _lib.Directive_IsLabel.argtypes = [c_ulonglong]
 _lib.Directive_IsLabel.restype = c_int
 _lib.Label_GetValue.argtypes = [c_ulonglong]
 _lib.Label_GetValue.restype = c_char_p
+_lib.Label_GetLine.argtypes = [c_ulonglong]
+_lib.Label_GetLine.restype = c_int
 
 # Add free function signature
 _lib.free.argtypes = [c_void_p]
@@ -70,3 +74,4 @@ _lib.free.argtypes = [c_void_p]
 # Add to directive function signatures
 _lib.Directive_IsContainer.argtypes = [c_ulonglong]
 _lib.Directive_IsContainer.restype = c_int
+_lib.Directive_Free.argtypes = [c_ulonglong]

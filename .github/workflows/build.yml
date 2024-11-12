@@ -1,0 +1,143 @@
+name: Build Wheels
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Download the ANTLR jar file into the parser directory
+      - name: Download ANTLR jar
+        run: |
+          mkdir -p parser
+          curl -L -o parser/antlr-4.13.1-complete.jar https://www.antlr.org/download/antlr-4.13.1-complete.jar
+
+      # Build wheels using cibuildwheel
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16.5
+        with:
+          package-dir: python
+          output-dir: wheelhouse
+        env:
+          CIBW_ARCHS_MACOS: "arm64 x86_64"
+          CIBW_BUILD_VERBOSITY: 1
+
+          # Install Go in BEFORE_ALL
+          CIBW_BEFORE_ALL: |
+            set -e
+
+            # Install Go
+            GO_VERSION=1.22.0
+            INSTALL_DIR="$PWD/go"
+            if [[ "$(uname)" == "Linux" ]]; then
+              GO_TARBALL=go$GO_VERSION.linux-amd64.tar.gz
+            elif [[ "$(uname)" == "Darwin" ]]; then
+              if [[ "$(uname -m)" == "arm64" ]]; then
+                GO_TARBALL=go$GO_VERSION.darwin-arm64.tar.gz
+              else
+                GO_TARBALL=go$GO_VERSION.darwin-amd64.tar.gz
+              fi
+            fi
+
+            # Create the installation directory before downloading
+            mkdir -p "$INSTALL_DIR"
+
+            # Download the Go tarball
+            curl -L -o "$INSTALL_DIR/$GO_TARBALL" "https://golang.org/dl/$GO_TARBALL"
+
+            # Extract the tarball
+            tar -C "$INSTALL_DIR" --strip-components=1 -xzf "$INSTALL_DIR/$GO_TARBALL"
+            export GOROOT="$INSTALL_DIR"
+            export PATH="$GOROOT/bin:$PATH"
+
+            # Verify Go installation
+            go version
+
+          # Install Java and build on Linux
+          CIBW_BEFORE_BUILD_LINUX: |
+            set -e
+
+            # Ensure Go is in the PATH
+            export GOROOT="$PWD/go"
+            export PATH="$GOROOT/bin:$PATH"
+
+            # Install Java
+            JAVA_VERSION=17
+            JAVA_DIR="$PWD/java"
+            mkdir -p "$JAVA_DIR"
+
+            # Download the Java tarball
+            curl -L -o java.tar.gz "https://api.adoptium.net/v3/binary/latest/${JAVA_VERSION}/ga/linux/x64/jdk/hotspot/normal/adoptium"
+
+            # Extract the tarball
+            tar -C "$JAVA_DIR" --strip-components=1 -xzf java.tar.gz
+            export JAVA_HOME="$JAVA_DIR"
+            export PATH="$JAVA_HOME/bin:$PATH"
+
+            # Verify Java installation
+            java -version
+
+            # Run go generate
+            go generate ./...
+
+            # Determine architecture
+            if [[ "$(uname -m)" == "arm64" ]] || [[ "$(uname -m)" == "aarch64" ]]; then
+              export GOARCH=arm64
+            else
+              export GOARCH=amd64
+            fi
+
+            # Build the Go shared library
+            go build -buildmode=c-shared \
+              -o python/reftrace/bindings/libreftrace.so \
+              ./pkg/capi
+
+          # Build on macOS (Java already available)
+          CIBW_BEFORE_BUILD_MACOS: |
+            set -e
+
+            # Ensure Go is in the PATH
+            export GOROOT="$PWD/go"
+            export PATH="$GOROOT/bin:$PATH"
+
+            # Run go generate
+            go generate ./...
+
+            # Determine architecture
+            if [[ "$(uname -m)" == "arm64" ]] || [[ "$(uname -m)" == "aarch64" ]]; then
+              export GOARCH=arm64
+            else
+              export GOARCH=amd64
+            fi
+
+            # Build the Go shared library
+            go build -buildmode=c-shared \
+              -o python/reftrace/bindings/libreftrace.dylib \
+              ./pkg/capi
+
+          # Environment variables for both Linux and macOS
+          CIBW_ENVIRONMENT: |
+            # Ensure Go is in the PATH during build and test
+            GOROOT="$PWD/go"
+            PATH="$GOROOT/bin:$PATH"
+            LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PWD/python/reftrace/bindings"
+            DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:$PWD/python/reftrace/bindings"
+
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: pytest {project}/python/tests
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          path: wheelhouse/*.whl
