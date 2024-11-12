@@ -19,6 +19,20 @@ class Container:
     @property
     def line(self) -> int:
         return _lib.Container_GetLine(self._handle)
+    
+    @property
+    def names(self) -> list[str]:
+        """Get all container names based on the format"""
+        if self.format == "simple":
+            return [self.simple_name] if self.simple_name else []
+        elif self.format == "ternary":
+            names = []
+            if self.true_name:
+                names.append(self.true_name)
+            if self.false_name:
+                names.append(self.false_name)
+            return names
+        raise ValueError(f"invalid container format: {self.format}")
         
     @property
     def simple_name(self) -> Optional[str]:

@@ -1,5 +1,7 @@
+import os
+from urllib.parse import urlparse
 from reftrace import Module
-from reftrace.linting import ModuleWarning, LintResults, rule
+from reftrace.linting import ModuleError, ModuleWarning, LintResults, rule
 
 
 # Process label rules
@@ -99,3 +101,128 @@ def alphanumerics(module: Module, results: LintResults):
                         warning=msg
                     )
                 )
+
+# Container rules
+
+@rule
+def container_with_space(module: Module, results: LintResults):
+    for process in module.processes:
+        for container in process.containers:
+            for name in container.names:
+                if " " in name:
+                    results.errors.append(
+                        ModuleError(
+                            line=container.line,
+                            error=f"container name '{name}' contains spaces, which is not allowed"
+                        )
+                    )
+
+@rule
+def multiple_containers(module: Module, results: LintResults):
+    for process in module.processes:
+        for container in process.containers:
+            for name in container.names:
+                if "biocontainers/" in name and ("https://containers" in name or "https://depot" in name):
+                    results.warnings.append(
+                        ModuleWarning(
+                            line=container.line,
+                            warning="Docker and Singularity containers specified on the same line"
+                        )
+                    )
+
+def is_valid_tag(tag: str) -> bool:
+    if not tag:
+        return False
+    return all(c.isalnum() or c in '-_.' for c in tag)
+
+def get_singularity_tag(container_name: str) -> tuple[str, str | None]:
+    try:
+        parsed_url = urlparse(container_name)
+        last_segment = os.path.basename(parsed_url.path)
+        
+        if last_segment in (".", "/"):
+            return "", "invalid container URL: no path segments"
+            
+        last_segment = last_segment.removesuffix(".img").removesuffix(".sif")
+        
+        # Check for colon-separated tag
+        if ":" in last_segment:
+            tag = last_segment.split(":")[-1]
+            if is_valid_tag(tag):
+                return tag, None
+                
+        # Check for _v<digit> pattern
+        if "_v" in last_segment:
+            idx = last_segment.rindex("_v")
+            if len(last_segment) > idx + 2 and last_segment[idx + 2].isdigit():
+                tag = last_segment[idx + 1:]
+                if is_valid_tag(tag):
+                    return tag, None
+                    
+        return "", f"singularity container '{container_name}' must specify a tag"
+    except Exception as e:
+        return "", f"invalid container URL '{container_name}': {str(e)}"
+
+def get_docker_tag(container_name: str) -> tuple[str, str | None]:
+    if ":" in container_name:
+        tag = container_name.split(":")[-1]
+        if not is_valid_tag(tag):
+            return "", f"invalid docker tag format for container '{container_name}'"
+        return tag, None
+    return "", f"docker container '{container_name}' must specify a tag"
+
+def docker_or_singularity(container_name: str) -> tuple[str, str | None]:
+    if container_name.startswith(("https://", "https://depot")):
+        try:
+            urlparse(container_name)
+            return "singularity", None
+        except Exception:
+            return "", f"invalid singularity container URL '{container_name}'"
+            
+    if "/" in container_name or ":" in container_name:
+        return "docker", None
+        
+    return "", f"unknown container type '{container_name}'"
+
+@rule
+def must_be_tagged(module: Module, results: LintResults):
+    for process in module.processes:
+        for container in process.containers:
+            for name in container.names:
+                container_type, error = docker_or_singularity(name)
+                if error:
+                    results.errors.append(
+                        ModuleError(
+                            line=container.line,
+                            error=error
+                        )
+                    )
+                    continue
+                    
+                if container_type == "singularity":
+                    _, error = get_singularity_tag(name)
+                    if error:
+                        results.errors.append(
+                            ModuleError(
+                                line=container.line,
+                                error=error
+                            )
+                        )
+                        
+                elif container_type == "docker":
+                    _, error = get_docker_tag(name)
+                    if error:
+                        results.errors.append(
+                            ModuleError(
+                                line=container.line,
+                                error=error
+                            )
+                        )
+                    
+                    if name.startswith("quay.io"):
+                        results.errors.append(
+                            ModuleError(
+                                line=container.line,
+                                error=f"container '{name}': please use 'organization/container:tag' format instead of full registry URL"
+                            )
+                        )
