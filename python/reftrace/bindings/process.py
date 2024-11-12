@@ -15,6 +15,10 @@ class Process:
         if result:
             return result.decode('utf-8')
         return ""
+    
+    @property
+    def line(self) -> int:
+        return _lib.Process_GetLine(self._handle)
 
     @property
     def containers(self) -> list[Container]:

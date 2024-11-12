@@ -22,7 +22,7 @@ def conflicting_labels(module: Module, results: LintResults):
             label_names = [label.value for label in good_labels]
             results.warnings.append(
                 ModuleWarning(
-                    line=1,  # TODO: Need to add Line() binding
+                    line=process.line,
                     warning=f"process '{process.name}' has conflicting labels: {label_names}"
                 )
             )
@@ -35,7 +35,7 @@ def no_standard_label(module: Module, results: LintResults):
         if len(good_labels) == 0:
             results.warnings.append(
                 ModuleWarning(
-                    line=1,  # TODO: Need to add Line() binding
+                    line=process.line,
                     warning=f"process '{process.name}' has no standard label"
                 )
             )
@@ -49,7 +49,7 @@ def non_standard_label(module: Module, results: LintResults):
             label_names = [label.value for label in bad_labels]
             results.warnings.append(
                 ModuleWarning(
-                    line=1,  # TODO: Need to add Line() binding
+                    line=process.line,
                     warning=f"process '{process.name}' has non-standard labels: {label_names}"
                 )
             )
@@ -65,7 +65,7 @@ def duplicate_labels(module: Module, results: LintResults):
             if count > 1:
                 results.warnings.append(
                     ModuleWarning(
-                        line=1,  # TODO: Need to add Line() binding
+                        line=process.line,
                         warning=f"process '{process.name}' has duplicate label '{label_name}' ({count} times)"
                     )
                 )
@@ -76,7 +76,7 @@ def no_labels(module: Module, results: LintResults):
         if not process.labels:
             results.warnings.append(
                 ModuleWarning(
-                    line=1,  # TODO: Need to add Line() binding
+                    line=process.line,
                     warning=f"process '{process.name}' has no labels"
                 )
             )
@@ -95,7 +95,7 @@ def alphanumerics(module: Module, results: LintResults):
             if msg := check_fn(label.value):
                 results.warnings.append(
                     ModuleWarning(
-                        line=1,  # TODO: Need to add Line() binding
+                        line=label.line,
                         warning=msg
                     )
                 )

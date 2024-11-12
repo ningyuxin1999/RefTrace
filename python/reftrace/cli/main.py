@@ -1,4 +1,3 @@
-# linter.py
 import click
 import os
 import importlib.util

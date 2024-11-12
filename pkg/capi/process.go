@@ -25,6 +25,14 @@ func Process_GetName(handle ProcessHandle) *C.char {
 	return nil
 }
 
+//export Process_GetLine
+func Process_GetLine(handle ProcessHandle) C.int {
+	if process, ok := processStore[handle]; ok {
+		return C.int(process.Line())
+	}
+	return 0
+}
+
 //export Process_GetDirectiveCount
 func Process_GetDirectiveCount(handle ProcessHandle) C.int {
 	if process, ok := processStore[handle]; ok {

@@ -13,6 +13,16 @@ func Container_GetFormat(handle DirectiveHandle) *C.char {
 	return nil
 }
 
+//export Container_GetLine
+func Container_GetLine(handle DirectiveHandle) C.int {
+	if directive, ok := directiveStore[handle]; ok {
+		if container, ok := directive.(*directives.Container); ok {
+			return C.int(container.Line())
+		}
+	}
+	return 0
+}
+
 //export Container_GetSimpleName
 func Container_GetSimpleName(handle DirectiveHandle) *C.char {
 	if directive, ok := directiveStore[handle]; ok {

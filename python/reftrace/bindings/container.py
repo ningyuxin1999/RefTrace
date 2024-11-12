@@ -15,6 +15,10 @@ class Container:
         if result:
             return result.decode('utf-8')
         return ""
+    
+    @property
+    def line(self) -> int:
+        return _lib.Container_GetLine(self._handle)
         
     @property
     def simple_name(self) -> Optional[str]:
