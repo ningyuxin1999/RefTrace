@@ -107,6 +107,9 @@ jobs:
           CIBW_BEFORE_BUILD_MACOS: |
             set -e
 
+            # install lipo
+            xcode-select --install
+
             # Ensure Go is in the PATH
             export GOROOT="$PWD/go"
             export PATH="$GOROOT/bin:$PATH"
