@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "reftrace"
 version = "0.4.0"
 description = "Code analysis for bioinformatics pipelines"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {text = "Apache-2.0"}
 authors = [
     {name = "Andrew Stiles", email = "andrew@reftrace.com"},
