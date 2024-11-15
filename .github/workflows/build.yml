@@ -114,17 +114,20 @@ jobs:
             # Run go generate
             go generate ./...
 
-            # Determine architecture
-            if [[ "$(uname -m)" == "arm64" ]] || [[ "$(uname -m)" == "aarch64" ]]; then
-              export GOARCH=arm64
-            else
-              export GOARCH=amd64
-            fi
-
-            # Build the Go shared library
-            go build -buildmode=c-shared \
-              -o python/reftrace/bindings/libreftrace.dylib \
+            # Build for both architectures
+            GOARCH=arm64 go build -buildmode=c-shared \
+              -o python/reftrace/bindings/libreftrace_arm64.dylib \
               ./pkg/capi
+
+            GOARCH=amd64 go build -buildmode=c-shared \
+              -o python/reftrace/bindings/libreftrace_x86_64.dylib \
+              ./pkg/capi
+
+            # Create a universal binary
+            lipo -create \
+              python/reftrace/bindings/libreftrace_arm64.dylib \
+              python/reftrace/bindings/libreftrace_x86_64.dylib \
+              -output python/reftrace/bindings/libreftrace.dylib
 
           # Environment variables for both Linux and macOS
           CIBW_ENVIRONMENT: |
