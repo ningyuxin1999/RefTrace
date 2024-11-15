@@ -1,10 +1,20 @@
 import os
+import sys
 import ctypes
 from ctypes import c_char_p, c_int, c_ulonglong, c_void_p
 
 def load_library():
     _lib_dir = os.path.dirname(os.path.abspath(__file__))
-    _lib_path = os.path.join(_lib_dir, 'libreftrace.so')
+
+    # Platform-specific library names
+    if sys.platform == "darwin":
+        lib_name = "libreftrace.dylib"
+    elif sys.platform == "win32":
+        lib_name = "libreftrace.dll"
+    else:  # Linux and others
+        lib_name = "libreftrace.so"
+
+    _lib_path = os.path.join(_lib_dir, lib_name)
     
     if not os.path.exists(_lib_path):
         raise RuntimeError(f"Library not found at {_lib_path}")
