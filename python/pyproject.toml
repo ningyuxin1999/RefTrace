@@ -20,6 +20,7 @@ reftrace = "reftrace.cli.main:cli"
 
 [tool.setuptools]
 packages = ["reftrace", "reftrace.bindings"]
+package-data = { "reftrace.bindings" = ["*.so", "*.dylib", "*.dll"] }
 
 [tool.cibuildwheel]
 build-frontend = "build"
