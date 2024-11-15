@@ -107,9 +107,6 @@ jobs:
           CIBW_BEFORE_BUILD_MACOS: |
             set -e
 
-            # install lipo
-            xcode-select --install
-
             # Ensure Go is in the PATH
             export GOROOT="$PWD/go"
             export PATH="$GOROOT/bin:$PATH"
@@ -127,7 +124,7 @@ jobs:
               ./pkg/capi
 
             # Create a universal binary
-            lipo -create \
+            /usr/bin/lipo -create \
               python/reftrace/bindings/libreftrace_arm64.dylib \
               python/reftrace/bindings/libreftrace_x86_64.dylib \
               -output python/reftrace/bindings/libreftrace.dylib
