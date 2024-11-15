@@ -30,7 +30,7 @@ jobs:
           package-dir: python
           output-dir: wheelhouse
         env:
-          CIBW_ARCHS_MACOS: "arm64 x86_64"
+          CIBW_ARCHS_MACOS: "arm64"
           CIBW_BUILD_VERBOSITY: 1
 
           # Install Go in BEFORE_ALL
@@ -114,20 +114,10 @@ jobs:
             # Run go generate
             go generate ./...
 
-            # Build for both architectures
-            GOARCH=arm64 go build -buildmode=c-shared \
-              -o python/reftrace/bindings/libreftrace_arm64.dylib \
+            # Build for arm mac
+            go build -buildmode=c-shared \
+              -o python/reftrace/bindings/libreftrace.dylib \
               ./pkg/capi
-
-            GOARCH=amd64 go build -buildmode=c-shared \
-              -o python/reftrace/bindings/libreftrace_x86_64.dylib \
-              ./pkg/capi
-
-            # Create a universal binary
-            /usr/bin/lipo -create \
-              python/reftrace/bindings/libreftrace_arm64.dylib \
-              python/reftrace/bindings/libreftrace_x86_64.dylib \
-              -output python/reftrace/bindings/libreftrace.dylib
 
           # Environment variables for both Linux and macOS
           CIBW_ENVIRONMENT: |
