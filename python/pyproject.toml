@@ -19,7 +19,7 @@ dependencies = [
 reftrace = "reftrace.cli.main:cli"
 
 [tool.setuptools]
-packages = ["reftrace", "reftrace.bindings"]
+packages = ["reftrace", "reftrace.bindings", "reftrace.cli", "reftrace.linting"]
 package-data = { "reftrace.bindings" = ["*.so", "*.dylib", "*.dll"] }
 
 [tool.cibuildwheel]
