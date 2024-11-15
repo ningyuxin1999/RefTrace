@@ -8,7 +8,12 @@ def create_test_file(content: str) -> tuple[str, Path]:
     tmpdir = tempfile.mkdtemp()
     nf_path = Path(tmpdir) / "workflow.nf"
     nf_path.write_text(content)
-    rules_path = Path(__file__).parent.parent / "fixtures" / "rules.py"
+    
+    # Look for rules in the installed package
+    import reftrace
+    pkg_path = Path(reftrace.__file__).parent
+    rules_path = pkg_path / "tests" / "fixtures" / "rules.py"
+
     return tmpdir, rules_path
 
 def test_container_with_space():
