@@ -9,10 +9,7 @@ def create_test_file(content: str) -> tuple[str, Path]:
     nf_path = Path(tmpdir) / "workflow.nf"
     nf_path.write_text(content)
     
-    # Look for rules in the installed package
-    import reftrace
-    pkg_path = Path(reftrace.__file__).parent
-    rules_path = pkg_path / "tests" / "fixtures" / "rules.py"
+    rules_path = Path(__file__).parent.parent / "fixtures" / "rules.py"
 
     return tmpdir, rules_path
 
