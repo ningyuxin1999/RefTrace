@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  release:
+    types: [published]
+  workflow_dispatch:
 
 jobs:
   build_wheels:
@@ -28,7 +31,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.16.5
         with:
           package-dir: python
-          output-dir: wheelhouse
+          output-dir: dist
         env:
           CIBW_ARCHS_MACOS: "arm64"
           CIBW_BUILD_VERBOSITY: 1
@@ -131,6 +134,28 @@ jobs:
           CIBW_TEST_COMMAND: pytest {project}/python/tests
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          path: wheelhouse/*.whl
+          path: dist/*.whl
+
+  publish_to_pypi:
+    name: Upload release to PyPI
+    needs: [build_wheels]
+    runs-on: ubuntu-latest
+    environment: test-pypi
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: artifact
+          path: dist
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
