@@ -2,6 +2,7 @@ import os
 from urllib.parse import urlparse
 from reftrace import Module
 from reftrace.linting import ModuleError, ModuleWarning, LintResults, rule
+from typing import Union, Tuple
 
 
 # Process label rules
@@ -135,7 +136,7 @@ def is_valid_tag(tag: str) -> bool:
         return False
     return all(c.isalnum() or c in '-_.' for c in tag)
 
-def get_singularity_tag(container_name: str) -> tuple[str, str | None]:
+def get_singularity_tag(container_name: str) -> Tuple[str, Union[str, None]]:
     try:
         parsed_url = urlparse(container_name)
         last_segment = os.path.basename(parsed_url.path)
@@ -163,7 +164,7 @@ def get_singularity_tag(container_name: str) -> tuple[str, str | None]:
     except Exception as e:
         return "", f"invalid container URL '{container_name}': {str(e)}"
 
-def get_docker_tag(container_name: str) -> tuple[str, str | None]:
+def get_docker_tag(container_name: str) -> Tuple[str, Union[str, None]]:
     if ":" in container_name:
         tag = container_name.split(":")[-1]
         if not is_valid_tag(tag):
@@ -171,7 +172,7 @@ def get_docker_tag(container_name: str) -> tuple[str, str | None]:
         return tag, None
     return "", f"docker container '{container_name}' must specify a tag"
 
-def docker_or_singularity(container_name: str) -> tuple[str, str | None]:
+def docker_or_singularity(container_name: str) -> Tuple[str, Union[str, None]]:
     if container_name.startswith(("https://", "https://depot")):
         try:
             urlparse(container_name)
