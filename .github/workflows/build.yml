@@ -1,13 +1,17 @@
 name: Build Wheels
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  release:
-    types: [published]
   workflow_dispatch:
+    inputs:
+      publish_to:
+        description: 'Publish to PyPI environment'
+        required: true
+        type: choice
+        options:
+          - 'none'
+          - 'test-pypi'
+          - 'pypi'
+        default: 'none'
 
 jobs:
   build_wheels:
@@ -139,25 +143,29 @@ jobs:
           name: wheels-${{ matrix.os }}
           path: dist/*.whl
 
-  publish_to_pypi:
-    name: Upload release to PyPI
+  publish:
+    name: Publish to PyPI
+    if: inputs.publish_to != 'none'
     needs: [build_wheels]
     runs-on: ubuntu-latest
-    environment: test-pypi
+    environment: ${{ inputs.publish_to }}
     permissions:
       id-token: write
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
-
-      - name: Publish package distributions to PyPI
+      - name: Publish to Test PyPI
+        if: inputs.publish_to == 'test-pypi'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          verbose: true
+      - name: Publish to PyPI
+        if: inputs.publish_to == 'pypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
           verbose: true

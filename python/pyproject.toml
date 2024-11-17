@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-reftrace = "reftrace.cli.main:cli"
+reftrace = "reftrace.cli.main:main"
 
 [tool.setuptools]
 packages = ["reftrace", "reftrace.bindings", "reftrace.cli", "reftrace.linting", "tests", "tests.fixtures"]
