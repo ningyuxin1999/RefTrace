@@ -1,17 +1,9 @@
 import pytest
 import tempfile
 from pathlib import Path
+from importlib.resources import files
 from reftrace.cli.main import run_lint
-
-def create_test_file(content: str) -> tuple[str, Path]:
-    """Helper function to create a test file and return its path"""
-    tmpdir = tempfile.mkdtemp()
-    nf_path = Path(tmpdir) / "workflow.nf"
-    nf_path.write_text(content)
-    
-    rules_path = Path(__file__).parent.parent / "fixtures" / "rules.py"
-
-    return tmpdir, rules_path
+from tests.utils import create_test_file
 
 def test_container_with_space():
     content = """

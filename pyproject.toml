@@ -21,8 +21,8 @@ reftrace = "reftrace.cli.main:cli"
 
 [tool.setuptools]
 package-dir = {"" = "python"}
-packages = ["reftrace", "reftrace.bindings", "reftrace.cli", "reftrace.linting", "tests", "tests.fixtures"]
-package-data = { "reftrace.bindings" = ["*.so", "*.dylib", "*.dll"], "tests.fixtures" = ["rules.py"] }
+packages = ["reftrace", "reftrace.bindings", "reftrace.cli", "reftrace.linting", "reftrace.fixtures"]
+package-data = { "reftrace.bindings" = ["*.so", "*.dylib", "*.dll"], "reftrace.fixtures" = ["rules.py"] }
 
 [tool.cibuildwheel]
 build-frontend = "build"
