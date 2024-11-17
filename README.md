@@ -34,11 +34,11 @@ def no_labels(module: Module, results: LintResults):
 
 ## Getting Started
 
-Copy [this example rules.py](python/tests/fixtures/rules.py) to the root of your pipeline directory. It has a good starter set of rules.  
-Then run in your pipeline directory:
+Run in your pipeline directory:
 
 ```
-reftrace rules.py .
+reftrace generate  # Create rules.py starter rules
+reftrace lint
 ```
 
 You'll get output like this:
