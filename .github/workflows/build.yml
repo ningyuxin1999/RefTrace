@@ -35,7 +35,6 @@ jobs:
         env:
           CIBW_ARCHS_MACOS: "arm64"
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
           # Install Go in BEFORE_ALL
           CIBW_BEFORE_ALL: |

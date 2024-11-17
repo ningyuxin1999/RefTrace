@@ -30,7 +30,6 @@ skip = ["*musllinux*"]
 test-requires = "pytest"
 test-command = "pytest {package}/tests"
 dependency-versions = "latest"
-repair-wheel-command = ""
 
 [tool.cibuildwheel.macos]
 archs = ["arm64"]
