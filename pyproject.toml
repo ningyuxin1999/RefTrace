@@ -29,7 +29,7 @@ build-frontend = "build"
 build = ["cp39-*", "cp3*-*"]
 skip = ["*musllinux*"]
 test-requires = "pytest"
-test-command = "pytest {package}/tests"
+test-command = "pytest {project}/python/tests"
 dependency-versions = "latest"
 
 [tool.cibuildwheel.macos]
