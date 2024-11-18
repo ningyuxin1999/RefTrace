@@ -39,4 +39,6 @@ archs = ["arm64"]
 archs = ["x86_64"]
 
 [tool.pytest.ini_options]
+testpaths = ["python/tests"]
+pythonpath = ["python"]
 python_files = ["test_*.py"]
