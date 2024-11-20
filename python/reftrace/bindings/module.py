@@ -4,7 +4,21 @@ from ctypes import c_char_p
 from .process import Process
 
 class Module:
+    """Represents a module that contains process definitions.
+    
+    This class provides an interface to load and interact with module files that contain
+    process definitions for reference tracing.
+    """
+
     def __init__(self, filepath: str):
+        """Initialize a new Module instance.
+        
+        Args:
+            filepath: Path to the module file to load.
+            
+        Raises:
+            RuntimeError: If the module file cannot be loaded or is invalid.
+        """
         encoded_path = filepath.encode('utf-8')
         result = _lib.Module_New(encoded_path)
         if result.error:
@@ -21,6 +35,11 @@ class Module:
 
     @property
     def path(self) -> str:
+        """Get the file path of the loaded module.
+        
+        Returns:
+            str: The file path of the module. Returns empty string if path cannot be retrieved.
+        """
         result = _lib.Module_GetPath(self._handle)
         if result:
             return result.decode('utf-8')
@@ -28,10 +47,20 @@ class Module:
 
     @property
     def dsl_version(self) -> int:
+        """Get the DSL (Domain Specific Language) version of the module.
+        
+        Returns:
+            int: The version number of the DSL used in this module.
+        """
         return _lib.Module_GetDSLVersion(self._handle)
 
     @property
     def processes(self) -> list[Process]:
+        """Get all processes defined in this module.
+        
+        Returns:
+            list[Process]: A list of Process objects defined in this module.
+        """
         count = _lib.Module_GetProcessCount(self._handle)
         result = []
         for i in range(count):

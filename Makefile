@@ -1,13 +1,19 @@
-.PHONY: build test clean lib venv
+.PHONY: build test clean lib venv docs
 
 # Main targets
 build: lib build-python
 
 # Build the shared library
 lib:
-	go build -buildmode=c-shared \
-		-o python/reftrace/bindings/libreftrace.so \
-		./pkg/capi
+	@if [ "$$(uname)" = "Darwin" ]; then \
+		go build -buildmode=c-shared \
+			-o python/reftrace/bindings/libreftrace.dylib \
+			./pkg/capi; \
+	else \
+		go build -buildmode=c-shared \
+			-o python/reftrace/bindings/libreftrace.so \
+			./pkg/capi; \
+	fi
 
 # Build the CLI tool
 build-go:
@@ -17,7 +23,7 @@ build-go:
 build-python: lib
 	python3 -m venv build-venv
 	. build-venv/bin/activate && python3 -m pip install --upgrade pip build
-	. build-venv/bin/activate && cd python && python3 -m build
+	. build-venv/bin/activate && python3 -m build
 	rm -rf build-venv
 
 test: test-go test-python
@@ -47,3 +53,8 @@ clean-venv:
 
 clean-build-env:
 	rm -rf build-venv
+
+docs:
+	rm -rf _build docs/_autosummary
+	sphinx-build -b markdown docs _build/markdown
+	python3 scripts/transform_docs.py _build/markdown/index.md

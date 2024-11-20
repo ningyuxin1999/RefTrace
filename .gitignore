@@ -24,3 +24,5 @@ python/dist
 python/reftrace.egg-info/
 wheelhouse/
 reftrace.egg-info/
+python/reftrace/bindings/libreftrace.dylib
+_build/
