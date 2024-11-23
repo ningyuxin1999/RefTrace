@@ -43,11 +43,11 @@ if (!params.skip_bbsplit && params.bbsplit_fasta_list) {
 
 	// Expected params with their line numbers and directive context
 	expected := []ParamInfo{
-		{Name: "skip_bbsplit", LineNumber: 2, InDirective: false},
-		{Name: "bbsplit_fasta_list", LineNumber: 2, InDirective: false},
-		{Name: "outdir", LineNumber: 7, InDirective: true, DirectiveName: "publishDir"},
-		{Name: "publish_dir_mode", LineNumber: 8, InDirective: true, DirectiveName: "publishDir"},
-		{Name: "save_reference", LineNumber: 10, InDirective: true, DirectiveName: "publishDir"},
+		{Name: "skip_bbsplit", LineNumber: 2, InDirective: false, InClosure: false},
+		{Name: "bbsplit_fasta_list", LineNumber: 2, InDirective: false, InClosure: false},
+		{Name: "outdir", LineNumber: 7, InDirective: true, DirectiveName: "publishDir", InClosure: true},
+		{Name: "publish_dir_mode", LineNumber: 8, InDirective: true, DirectiveName: "publishDir", InClosure: false},
+		{Name: "save_reference", LineNumber: 10, InDirective: true, DirectiveName: "publishDir", InClosure: false},
 	}
 
 	// Compare results with additional directive context checks
@@ -69,6 +69,10 @@ if (!params.skip_bbsplit && params.bbsplit_fasta_list) {
 		if param.DirectiveName != expected[i].DirectiveName {
 			t.Errorf("For param %s: expected DirectiveName %s, got %s",
 				param.Name, expected[i].DirectiveName, param.DirectiveName)
+		}
+		if param.InClosure != expected[i].InClosure {
+			t.Errorf("For param %s: expected InClosure %v, got %v",
+				param.Name, expected[i].InClosure, param.InClosure)
 		}
 	}
 }

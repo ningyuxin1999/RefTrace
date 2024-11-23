@@ -13,6 +13,7 @@ type ParamInfo struct {
 	LineNumber    int
 	InDirective   bool
 	DirectiveName string
+	InClosure     bool
 }
 
 type ParamVisitor struct {
@@ -21,6 +22,7 @@ type ParamVisitor struct {
 	methodCallStack  []string
 	currentDirective string
 	inMapExpression  bool
+	closureDepth     int
 }
 
 // NewParamVisitor creates a new ParamVisitor
@@ -29,6 +31,7 @@ func NewParamVisitor() *ParamVisitor {
 		BaseVisitor:     nf.NewBaseVisitor(),
 		params:          make(map[string]ParamInfo),
 		methodCallStack: make([]string, 0),
+		closureDepth:    0,
 	}
 }
 
@@ -68,6 +71,12 @@ func (v *ParamVisitor) VisitMapExpression(expression *parser.MapExpression) {
 	v.inMapExpression = prevInMap
 }
 
+func (v *ParamVisitor) VisitClosureExpression(expression *parser.ClosureExpression) {
+	v.closureDepth++
+	v.BaseVisitor.VisitClosureExpression(expression)
+	v.closureDepth--
+}
+
 func (v *ParamVisitor) VisitPropertyExpression(expression *parser.PropertyExpression) {
 	varExpr, isVarExpr := expression.GetObjectExpression().(*parser.VariableExpression)
 	constExpr, isConstExpr := expression.GetProperty().(*parser.ConstantExpression)
@@ -82,6 +91,7 @@ func (v *ParamVisitor) VisitPropertyExpression(expression *parser.PropertyExpres
 			LineNumber:    lineNumber,
 			InDirective:   inDirective,
 			DirectiveName: v.currentDirective,
+			InClosure:     v.closureDepth > 0,
 		}
 	}
 
