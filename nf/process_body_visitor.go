@@ -35,7 +35,7 @@ func NewProcessBodyVisitor() *ProcessBodyVisitor {
 	return &ProcessBodyVisitor{mode: ScriptMode, hitDeclBlock: false}
 }
 
-var directiveSet = map[string]func(*parser.MethodCallExpression) (directives.Directive, error){
+var DirectiveSet = map[string]func(*parser.MethodCallExpression) (directives.Directive, error){
 	"accelerator":      directives.MakeAccelerator,
 	"afterScript":      directives.MakeAfterScript,
 	"arch":             directives.MakeArch,
@@ -100,7 +100,7 @@ func makeDirective(statement parser.Statement) (directives.Directive, error) {
 			if args, ok := mce.GetArguments().(*parser.ArgumentListExpression); ok {
 				if len(args.GetExpressions()) == 1 {
 					if _, isClosure := args.GetExpressions()[0].(*parser.ClosureExpression); isClosure {
-						if _, exists := directiveSet[methodName]; exists {
+						if _, exists := DirectiveSet[methodName]; exists {
 							if methodName != "executor" && methodName != "label" && methodName != "maxForks" {
 								return directives.NewDynamicDirective(methodName, mce.GetLineNumber()), nil
 							}
@@ -108,7 +108,7 @@ func makeDirective(statement parser.Statement) (directives.Directive, error) {
 					}
 				}
 			}
-			if makeFunc, exists := directiveSet[methodName]; exists {
+			if makeFunc, exists := DirectiveSet[methodName]; exists {
 				return makeFunc(mce)
 			}
 
