@@ -16,14 +16,14 @@ func (sp sourcePosition) GetStopLine() int    { return sp.stopLine }
 func (sp sourcePosition) GetStopColumn() int  { return sp.stopColumn }
 
 // configureAST sets the position information for any ASTNode
-func configureAST[T ASTNode](astNode T, ctx antlr.ParserRuleContext) T {
+func configureAST[T ASTNodeNoVisit](astNode T, ctx antlr.ParserRuleContext) T {
 	start := ctx.GetStart()
 	stop := ctx.GetStop()
 
 	return configureASTWithTokens(astNode, start, stop)
 }
 
-func configureASTWithInitialStop[T ASTNode](astNode T, ctx antlr.ParserRuleContext, initialStop ASTNode) T {
+func configureASTWithInitialStop[T ASTNodeNoVisit](astNode T, ctx antlr.ParserRuleContext, initialStop ASTNodeNoVisit) T {
 	start := ctx.GetStart()
 	astNode.SetLineNumber(start.GetLine())
 	astNode.SetColumnNumber(start.GetColumn() + 1)
@@ -40,12 +40,12 @@ func configureASTWithInitialStop[T ASTNode](astNode T, ctx antlr.ParserRuleConte
 }
 
 // configureASTWithToken sets the position information for any ASTNode using a single token
-func configureASTWithToken[T ASTNode](astNode T, token antlr.Token) T {
+func configureASTWithToken[T ASTNodeNoVisit](astNode T, token antlr.Token) T {
 	return configureASTWithTokens(astNode, token, token)
 }
 
 // configureASTWithTokens sets the position information for any ASTNode using start and stop tokens
-func configureASTWithTokens[T ASTNode](astNode T, start, stop antlr.Token) T {
+func configureASTWithTokens[T ASTNodeNoVisit](astNode T, start, stop antlr.Token) T {
 	astNode.SetLineNumber(start.GetLine())
 	astNode.SetColumnNumber(start.GetColumn() + 1)
 
@@ -55,13 +55,13 @@ func configureASTWithTokens[T ASTNode](astNode T, start, stop antlr.Token) T {
 	return astNode
 }
 
-func configureEndPosition[T ASTNode](astNode T, token antlr.Token) {
+func configureEndPosition[T ASTNodeNoVisit](astNode T, token antlr.Token) {
 	endPos := endPosition(token)
 	astNode.SetLastLineNumber(endPos.V1)
 	astNode.SetLastColumnNumber(endPos.V2)
 }
 
-func configureASTFromSource[T ASTNode](astNode T, source ASTNode) T {
+func configureASTFromSource[T ASTNodeNoVisit](astNode T, source ASTNodeNoVisit) T {
 	astNode.SetLineNumber(source.GetLineNumber())
 	astNode.SetColumnNumber(source.GetColumnNumber())
 	astNode.SetLastLineNumber(source.GetLastLineNumber())

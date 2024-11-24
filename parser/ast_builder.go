@@ -151,7 +151,7 @@ func (t tokenAdapter) GetStopColumn() int {
 
 // Implement SourcePosition for ASTNode
 type astNodeAdapter struct {
-	ASTNode
+	ASTNodeNoVisit
 }
 
 func (a astNodeAdapter) GetStartLine() int {
@@ -305,7 +305,7 @@ func (builder *ASTBuilder) VisitCompilationUnit(ctx *CompilationUnitContext) int
 		scriptStatementsPtr = ctx.ScriptStatements().(*ScriptStatementsContext)
 	}
 
-	for _, node := range builder.VisitScriptStatements(scriptStatementsPtr).([]ASTNode) {
+	for _, node := range builder.VisitScriptStatements(scriptStatementsPtr).([]ASTNodeNoVisit) {
 		switch n := node.(type) {
 		case *DeclarationListStatement:
 			for _, stmt := range n.GetDeclarationStatements() {
@@ -343,12 +343,12 @@ func (builder *ASTBuilder) VisitCompilationUnit(ctx *CompilationUnitContext) int
 
 func (builder *ASTBuilder) VisitScriptStatements(ctx *ScriptStatementsContext) interface{} {
 	if ctx == nil {
-		return []ASTNode{}
+		return []ASTNodeNoVisit{}
 	}
 
-	var nodes []ASTNode
+	var nodes []ASTNodeNoVisit
 	for _, stmt := range ctx.AllScriptStatement() {
-		nodes = append(nodes, builder.Visit(stmt).(ASTNode))
+		nodes = append(nodes, builder.Visit(stmt).(ASTNodeNoVisit))
 	}
 
 	return nodes
@@ -2337,7 +2337,7 @@ func (pe *PropertyExpander) CreateGetterBlock(propertyNode *PropertyNode, field 
 
 */
 
-func (v *ASTBuilder) declareProperty(ctx *GroovyParserRuleContext, modifierManager *ModifierManager, variableType IClassNode, classNode IClassNode, i int, startNode ASTNode, fieldName string, modifiers int, initialValue Expression) *PropertyNode {
+func (v *ASTBuilder) declareProperty(ctx *GroovyParserRuleContext, modifierManager *ModifierManager, variableType IClassNode, classNode IClassNode, i int, startNode ASTNodeNoVisit, fieldName string, modifiers int, initialValue Expression) *PropertyNode {
 	var propertyNode *PropertyNode
 	fieldNode := classNode.GetDeclaredField(fieldName)
 
@@ -5281,8 +5281,9 @@ func (builder *ASTBuilder) configureScriptClassNode() {
 }
 
 // DeclarationListStatement represents a list of declaration statements
+// DeclarationListStatement represents a list of declaration statements
 type DeclarationListStatement struct {
-	Statement
+	*BaseStatement
 	declarationStatements []*ExpressionStatement
 }
 
@@ -5296,7 +5297,10 @@ func NewDeclarationListStatement(declarations ...*DeclarationExpression) *Declar
 		}
 		declarationStatements[i] = configureASTFromSource(stmt, decl)
 	}
-	return &DeclarationListStatement{Statement: NewBaseStatement(), declarationStatements: declarationStatements}
+	return &DeclarationListStatement{
+		BaseStatement:         NewBaseStatement(),
+		declarationStatements: declarationStatements,
+	}
 }
 
 // GetDeclarationStatements returns the list of ExpressionStatements
@@ -5317,6 +5321,18 @@ func (d *DeclarationListStatement) GetDeclarationStatements() []*ExpressionState
 	}
 
 	return d.declarationStatements
+}
+
+/*
+	note this should not be called in practice.
+
+The main function of DeclarationListStatement is to be used by the builder
+and transformed into a block statement.
+*/
+func (d *DeclarationListStatement) Visit(visitor GroovyCodeVisitor) {
+	for _, stmt := range d.declarationStatements {
+		visitor.VisitExpressionStatement(stmt)
+	}
 }
 
 // GetDeclarationExpressions returns the list of DeclarationExpressions

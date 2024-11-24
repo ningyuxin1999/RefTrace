@@ -15,6 +15,10 @@ func NewDeclarationStatement(declaration *DeclarationExpression) *DeclarationSta
 	}
 }
 
+func (d *DeclarationStatement) Visit(visitor GroovyCodeVisitor) {
+	visitor.VisitDeclarationExpression(d.Declaration)
+}
+
 // GetText implements the Statement interface.
 func (d *DeclarationStatement) GetText() string {
 	return d.Declaration.GetText()

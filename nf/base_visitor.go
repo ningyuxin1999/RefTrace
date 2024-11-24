@@ -7,6 +7,12 @@ import (
 var _ parser.GroovyCodeVisitor = (*BaseVisitor)(nil)
 
 type BaseVisitor struct {
+	VisitMethodCallExpressionHook func(call *parser.MethodCallExpression)
+	VisitBinaryExpressionHook     func(expr *parser.BinaryExpression)
+	VisitExpressionStatementHook  func(expr *parser.ExpressionStatement)
+	VisitClosureExpressionHook    func(expr *parser.ClosureExpression)
+	VisitPropertyExpressionHook   func(expr *parser.PropertyExpression)
+	VisitExpressionHook           func(expr parser.Expression)
 }
 
 // NewBaseVisitor creates a new BaseVisitor
@@ -43,6 +49,10 @@ func (v *BaseVisitor) VisitIfElse(statement *parser.IfStatement) {
 }
 
 func (v *BaseVisitor) VisitExpressionStatement(statement *parser.ExpressionStatement) {
+	if v.VisitExpressionStatementHook != nil {
+		v.VisitExpressionStatementHook(statement)
+		return
+	}
 	v.VisitExpression(statement.GetExpression())
 }
 
@@ -104,6 +114,10 @@ func (v *BaseVisitor) VisitStatement(statement parser.Statement) {
 
 // Expressions
 func (v *BaseVisitor) VisitMethodCallExpression(call *parser.MethodCallExpression) {
+	if v.VisitMethodCallExpressionHook != nil {
+		v.VisitMethodCallExpressionHook(call)
+		return
+	}
 	v.VisitExpression(call.GetObjectExpression())
 	v.VisitExpression(call.GetMethod())
 	v.VisitExpression(call.GetArguments())
@@ -129,6 +143,10 @@ func (v *BaseVisitor) VisitShortTernaryExpression(expression *parser.ElvisOperat
 }
 
 func (v *BaseVisitor) VisitBinaryExpression(expression *parser.BinaryExpression) {
+	if v.VisitBinaryExpressionHook != nil {
+		v.VisitBinaryExpressionHook(expression)
+		return
+	}
 	v.VisitExpression(expression.GetLeftExpression())
 	v.VisitExpression(expression.GetRightExpression())
 }
@@ -146,6 +164,10 @@ func (v *BaseVisitor) VisitBooleanExpression(expression *parser.BooleanExpressio
 }
 
 func (v *BaseVisitor) VisitClosureExpression(expression *parser.ClosureExpression) {
+	if v.VisitClosureExpressionHook != nil {
+		v.VisitClosureExpressionHook(expression)
+		return
+	}
 	if expression.IsParameterSpecified() {
 		for _, parameter := range expression.GetParameters() {
 			if parameter.HasInitialExpression() {
@@ -188,6 +210,10 @@ func (v *BaseVisitor) VisitRangeExpression(expression *parser.RangeExpression) {
 }
 
 func (v *BaseVisitor) VisitPropertyExpression(expression *parser.PropertyExpression) {
+	if v.VisitPropertyExpressionHook != nil {
+		v.VisitPropertyExpressionHook(expression)
+		return
+	}
 	v.VisitExpression(expression.GetObjectExpression())
 	v.VisitExpression(expression.GetProperty())
 }
@@ -273,5 +299,9 @@ func (v *BaseVisitor) VisitListOfExpressions(expressions []parser.Expression) {
 }
 
 func (v *BaseVisitor) VisitExpression(expression parser.Expression) {
+	if v.VisitExpressionHook != nil {
+		v.VisitExpressionHook(expression)
+		return
+	}
 	expression.Visit(v)
 }

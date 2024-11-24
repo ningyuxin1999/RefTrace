@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+var _ Expression = (*ListExpression)(nil)
+
 // ListExpression represents a list expression [1, 2, 3] which creates a mutable List
 type ListExpression struct {
 	*BaseExpression
@@ -32,6 +34,10 @@ func NewListExpressionWithExpressions(expressions []Expression) *ListExpression 
 	// list type to List<X> if possible.
 	le.SetType(LIST_TYPE)
 	return le
+}
+
+func (le *ListExpression) Visit(visitor GroovyCodeVisitor) {
+	visitor.VisitListExpression(le)
 }
 
 // AddExpression adds an expression to the list

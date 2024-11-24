@@ -4,7 +4,7 @@ import (
 	"container/list"
 )
 
-var _ Statement = (*BaseStatement)(nil)
+//var _ Statement = (*BaseStatement)(nil)
 
 // NewBaseStatement creates and returns a new BaseStatement instance.
 func NewBaseStatement() *BaseStatement {

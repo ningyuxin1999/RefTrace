@@ -29,7 +29,7 @@ func (m *MethodReferenceExpression) TransformExpression(transformer ExpressionTr
 	if m.BaseExpression == nil {
 		ret = NewMethodReferenceExpression(THIS_EXPRESSION, mname)
 	} else {
-		ret = NewMethodReferenceExpression(transformer.Transform(m.BaseExpression), mname)
+		ret = NewMethodReferenceExpression(transformer.Transform(m.expression), mname)
 	}
 	ret.SetSourcePosition(m)
 	ret.CopyNodeMetaData(m)

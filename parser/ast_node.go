@@ -2,9 +2,14 @@ package parser
 
 import "reflect"
 
-var _ ASTNode = (*BaseASTNode)(nil)
+// var _ ASTNode = (*BaseASTNode)(nil)
 
 type ASTNode interface {
+	ASTNodeNoVisit
+	Visit(visitor GroovyCodeVisitor)
+}
+
+type ASTNodeNoVisit interface {
 	NodeMetaDataHandler
 	GetText() string
 	GetLineNumber() int
@@ -20,7 +25,6 @@ type ASTNode interface {
 	SetMetaDataMap(map[interface{}]interface{})
 	CopyNodeMetaDataHandler(NodeMetaDataHandler)
 	NewMetaDataMap() map[interface{}]interface{}
-	Visit(visitor GroovyCodeVisitor)
 }
 
 type BaseASTNode struct {
@@ -29,10 +33,6 @@ type BaseASTNode struct {
 	columnNumber     int
 	lastLineNumber   int
 	lastColumnNumber int
-}
-
-func (node *BaseASTNode) Visit(visitor GroovyCodeVisitor) {
-
 }
 
 func (node *BaseASTNode) GetText() string {

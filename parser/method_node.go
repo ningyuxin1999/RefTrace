@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-var _ MethodOrConstructorNode = (*MethodNode)(nil)
+//var _ MethodOrConstructorNode = (*MethodNode)(nil)
 
 type MethodOrConstructorNode interface {
 	NodeMetaDataHandler
-	ASTNode
+	ASTNodeNoVisit
 	GetName() string
 	GetModifiers() int
 	IsAbstract() bool

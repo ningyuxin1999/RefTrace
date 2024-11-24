@@ -33,3 +33,7 @@ func (t *ThrowStatement) SetExpression(expression Expression) {
 func (t *ThrowStatement) GetText() string {
 	return "throw " + t.expression.GetText()
 }
+
+func (t *ThrowStatement) Visit(visitor GroovyCodeVisitor) {
+	visitor.VisitThrowStatement(t)
+}
