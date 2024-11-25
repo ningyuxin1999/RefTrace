@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (r *ResourceLabelsDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(r.Line()),
+		Directive: &pb.Directive_ResourceLabels{
+			ResourceLabels: &pb.ResourceLabelsDirective{
+				Keys: r.Keys,
+			},
+		},
+	}
+}
 
 var _ Directive = (*ResourceLabelsDirective)(nil)
 var _ starlark.Value = (*ResourceLabelsDirective)(nil)

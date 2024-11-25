@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (e *ErrorStrategyDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(e.Line()),
+		Directive: &pb.Directive_ErrorStrategy{
+			ErrorStrategy: &pb.ErrorStrategyDirective{
+				Strategy: e.Strategy,
+			},
+		},
+	}
+}
 
 var _ Directive = (*ErrorStrategyDirective)(nil)
 

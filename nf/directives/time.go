@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (t *TimeDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(t.Line()),
+		Directive: &pb.Directive_Time{
+			Time: &pb.TimeDirective{
+				Duration: t.Duration,
+			},
+		},
+	}
+}
 
 var _ Directive = (*TimeDirective)(nil)
 var _ starlark.Value = (*TimeDirective)(nil)

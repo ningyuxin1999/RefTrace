@@ -8,7 +8,20 @@ import (
 	"strings"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (c *ClusterOptions) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(c.Line()),
+		Directive: &pb.Directive_ClusterOptions{
+			ClusterOptions: &pb.ClusterOptionsDirective{
+				Options: c.Options,
+			},
+		},
+	}
+}
 
 var _ Directive = (*ClusterOptions)(nil)
 

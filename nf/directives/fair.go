@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (f *FairDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(f.Line()),
+		Directive: &pb.Directive_Fair{
+			Fair: &pb.FairDirective{
+				Enabled: f.Enabled,
+			},
+		},
+	}
+}
 
 var _ Directive = (*FairDirective)(nil)
 

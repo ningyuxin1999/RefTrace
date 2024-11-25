@@ -26,3 +26,7 @@ wheelhouse/
 reftrace.egg-info/
 python/reftrace/bindings/libreftrace.dylib
 _build/
+nf/proto
+build-venv/
+dist/
+python/reftrace/proto/

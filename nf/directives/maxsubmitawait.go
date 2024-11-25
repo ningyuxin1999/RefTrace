@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (m *MaxSubmitAwaitDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(m.Line()),
+		Directive: &pb.Directive_MaxSubmitAwait{
+			MaxSubmitAwait: &pb.MaxSubmitAwaitDirective{
+				MaxSubmitAwait: m.MaxSubmitAwait,
+			},
+		},
+	}
+}
 
 var _ Directive = (*MaxSubmitAwaitDirective)(nil)
 var _ starlark.Value = (*MaxSubmitAwaitDirective)(nil)

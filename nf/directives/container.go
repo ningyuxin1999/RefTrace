@@ -7,7 +7,29 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (c *Container) ToProto() *pb.Directive {
+	format := pb.ContainerDirective_SIMPLE
+	if c.Format == Ternary {
+		format = pb.ContainerDirective_TERNARY
+	}
+
+	return &pb.Directive{
+		Line: int32(c.Line()),
+		Directive: &pb.Directive_Container{
+			Container: &pb.ContainerDirective{
+				Format:     format,
+				SimpleName: c.SimpleName,
+				Condition:  c.Condition,
+				TrueName:   c.TrueName,
+				FalseName:  c.FalseName,
+			},
+		},
+	}
+}
 
 var _ Directive = (*Container)(nil)
 

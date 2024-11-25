@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (d *DiskDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(d.Line()),
+		Directive: &pb.Directive_Disk{
+			Disk: &pb.DiskDirective{
+				Space: d.Space,
+			},
+		},
+	}
+}
 
 var _ Directive = (*DiskDirective)(nil)
 

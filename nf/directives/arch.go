@@ -7,7 +7,21 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (a *Arch) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(a.Line()),
+		Directive: &pb.Directive_Arch{
+			Arch: &pb.ArchDirective{
+				Name:   a.Name,
+				Target: a.Target,
+			},
+		},
+	}
+}
 
 var _ Directive = (*Arch)(nil)
 var _ starlark.Value = (*Arch)(nil)

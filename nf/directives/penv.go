@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (p *PenvDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(p.Line()),
+		Directive: &pb.Directive_Penv{
+			Penv: &pb.PenvDirective{
+				Environment: p.Environment,
+			},
+		},
+	}
+}
 
 var _ Directive = (*PenvDirective)(nil)
 var _ starlark.Value = (*PenvDirective)(nil)

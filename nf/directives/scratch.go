@@ -7,7 +7,21 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (s *ScratchDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(s.Line()),
+		Directive: &pb.Directive_Scratch{
+			Scratch: &pb.ScratchDirective{
+				Enabled:   s.Enabled,
+				Directory: s.Directory,
+			},
+		},
+	}
+}
 
 var _ Directive = (*ScratchDirective)(nil)
 var _ starlark.Value = (*ScratchDirective)(nil)

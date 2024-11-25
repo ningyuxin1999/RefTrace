@@ -6,9 +6,24 @@ import (
 	"reft-go/nf/directives"
 	"reft-go/nf/inputs"
 	"reft-go/nf/outputs"
+	pb "reft-go/nf/proto"
 )
 
 var _ parser.GroovyCodeVisitor = (*ProcessVisitor)(nil)
+
+func (p *Process) ToProto() *pb.Process {
+
+	protoProcess := &pb.Process{
+		Name: p.Name,
+		Line: int32(p.Line()),
+	}
+
+	for _, directive := range p.Directives {
+		protoProcess.Directives = append(protoProcess.Directives, directive.ToProto())
+	}
+
+	return protoProcess
+}
 
 type Process struct {
 	Name       string

@@ -6,7 +6,7 @@ import (
 	"slices"
 )
 
-func parseConfig(block *parser.BlockStatement) []ProcessScope {
+func ParseConfig(block *parser.BlockStatement) []ProcessScope {
 	// Create and use ProcessVisitor
 	processVisitor := NewProcessScopeVisitor()
 	processVisitor.VisitBlockStatement(block)

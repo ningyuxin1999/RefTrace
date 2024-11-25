@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (c *Conda) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(c.Line()),
+		Directive: &pb.Directive_Conda{
+			Conda: &pb.CondaDirective{
+				PossibleValues: c.PossibleValues,
+			},
+		},
+	}
+}
 
 var _ Directive = (*Conda)(nil)
 

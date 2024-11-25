@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (t *TagDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(t.Line()),
+		Directive: &pb.Directive_Tag{
+			Tag: &pb.TagDirective{
+				Tag: t.Tag,
+			},
+		},
+	}
+}
 
 var _ Directive = (*TagDirective)(nil)
 var _ starlark.Value = (*TagDirective)(nil)

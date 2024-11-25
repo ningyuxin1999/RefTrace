@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (d *DebugDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(d.Line()),
+		Directive: &pb.Directive_Debug{
+			Debug: &pb.DebugDirective{
+				Enabled: d.Enabled,
+			},
+		},
+	}
+}
 
 var _ Directive = (*DebugDirective)(nil)
 

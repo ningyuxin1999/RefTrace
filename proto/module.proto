@@ -1,0 +1,268 @@
+syntax = "proto3";
+
+package nf;
+
+option go_package = "nf/proto";
+
+// Directive represents any Nextflow process directive
+message Directive {
+    int32 line = 1;  // Common field for all directives
+    oneof directive {
+      AcceleratorDirective accelerator = 2;
+      AfterScriptDirective after_script = 3;
+      ArchDirective arch = 4;
+      ArrayDirective array = 5;
+      BeforeScriptDirective before_script = 6;
+      CacheDirective cache = 7;
+      ClusterOptionsDirective cluster_options = 8;
+      CondaDirective conda = 9;
+      ContainerDirective container = 10;
+      ContainerOptionsDirective container_options = 11;
+      CpusDirective cpus = 12;
+      DebugDirective debug = 13;
+      DiskDirective disk = 14;
+      EchoDirective echo = 15;
+      ErrorStrategyDirective error_strategy = 16;
+      ExecutorDirective executor = 17;
+      ExtDirective ext = 18;
+      FairDirective fair = 19;
+      LabelDirective label = 20;
+      MachineTypeDirective machine_type = 21;
+      MaxSubmitAwaitDirective max_submit_await = 22;
+      MaxErrorsDirective max_errors = 23;
+      MaxForksDirective max_forks = 24;
+      MaxRetriesDirective max_retries = 25;
+      MemoryDirective memory = 26;
+      ModuleDirective module = 27;
+      PenvDirective penv = 28;
+      PodDirective pod = 29;
+      PublishDirDirective publish_dir = 30;
+      QueueDirective queue = 31;
+      ResourceLabelsDirective resource_labels = 32;
+      ResourceLimitsDirective resource_limits = 33;
+      ScratchDirective scratch = 34;
+      ShellDirective shell = 35;
+      SpackDirective spack = 36;
+      StageInModeDirective stage_in_mode = 37;
+      StageOutModeDirective stage_out_mode = 38;
+      StoreDirDirective store_dir = 39;
+      TagDirective tag = 40;
+      TimeDirective time = 41;
+      DynamicDirective dynamic = 42;
+      UnknownDirective unknown = 43;
+    }
+}
+
+message AcceleratorDirective {
+    int32 num_gpus = 1;
+    string gpu_type = 2;
+}
+
+message AfterScriptDirective {
+    string script = 1;
+}
+
+message ArchDirective {
+    string name = 1;
+    string target = 2;
+}
+
+message ArrayDirective {
+    int32 size = 1;
+}
+
+message BeforeScriptDirective {
+    string script = 1;
+}
+
+message CacheDirective {
+    bool enabled = 1;
+    bool deep = 2;
+    bool lenient = 3;
+}
+
+message ClusterOptionsDirective {
+    string options = 1;
+}
+
+message CondaDirective {
+    repeated string possible_values = 1;
+}
+
+message ContainerDirective {
+    enum Format {
+        SIMPLE = 0;
+        TERNARY = 1;
+    }
+    Format format = 1;
+    string simple_name = 2;
+    string condition = 3;
+    string true_name = 4;
+    string false_name = 5;
+}
+
+message ContainerOptionsDirective {
+    string options = 1;
+}
+
+message CpusDirective {
+    int32 num = 1;
+}
+
+message DebugDirective {
+    bool enabled = 1;
+}
+
+message DiskDirective {
+    string space = 1;
+}
+
+message EchoDirective {
+    bool enabled = 1;
+}
+
+message ErrorStrategyDirective {
+    string strategy = 1;
+}
+
+message ExecutorDirective {
+    string executor = 1;
+}
+
+message ExtDirective {
+    string version = 1;
+    string args = 2;
+}
+
+message FairDirective {
+    bool enabled = 1;
+}
+
+message LabelDirective {
+    string label = 1;
+}
+
+message MachineTypeDirective {
+    string machine_type = 1;
+}
+
+message MaxSubmitAwaitDirective {
+    string max_submit_await = 1;
+}
+
+message MaxErrorsDirective {
+    int32 num = 1;
+}
+
+message MaxForksDirective {
+    int32 num = 1;
+}
+
+message MaxRetriesDirective {
+    int32 num = 1;
+}
+
+message MemoryDirective {
+    double memory_gb = 1;
+}
+
+message ModuleDirective {
+    string name = 1;
+}
+
+message PenvDirective {
+    string environment = 1;
+}
+
+message PodDirective {
+    string env = 1;
+    string value = 2;
+}
+
+message PublishDirDirective {
+    string path = 1;
+    string params = 2;
+    optional bool content_type = 3;
+    optional bool enabled = 4;
+    optional bool fail_on_error = 5;
+    string mode = 6;
+    optional bool overwrite = 7;
+}
+
+message QueueDirective {
+    string name = 1;
+}
+
+message ResourceLabelsDirective {
+    repeated string keys = 1;
+}
+
+message ResourceLimitsDirective {
+    optional int32 cpus = 1;
+    optional string disk = 2;
+    optional string memory = 3;
+    optional string time = 4;
+}
+
+message ScratchDirective {
+    bool enabled = 1;
+    string directory = 2;
+}
+
+message ShellDirective {
+    string command = 1;
+}
+
+message SpackDirective {
+    string dependencies = 1;
+}
+
+message StageInModeDirective {
+    string mode = 1;
+}
+
+message StageOutModeDirective {
+    string mode = 1;
+}
+
+message StoreDirDirective {
+    string directory = 1;
+}
+
+message TagDirective {
+    string tag = 1;
+}
+
+message TimeDirective {
+    string duration = 1;
+}
+
+message DynamicDirective {
+    string name = 1;
+}
+
+message UnknownDirective {
+    string name = 1;
+}
+
+// ModuleResult represents the result of parsing a Nextflow module file
+message ModuleResult {
+    oneof result {
+      Module module = 1;
+      string error = 2;
+    }
+}
+
+// Module represents a Nextflow module file
+message Module {
+  string path = 1;
+  int32 dsl_version = 2;
+  repeated Process processes = 3;
+}
+
+// Process represents a Nextflow process
+message Process {
+  string name = 1;
+  int32 line = 2;
+  repeated Directive directives = 3;
+}

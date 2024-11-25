@@ -7,7 +7,21 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (e *ExtDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(e.Line()),
+		Directive: &pb.Directive_Ext{
+			Ext: &pb.ExtDirective{
+				Version: e.Version,
+				Args:    e.Args,
+			},
+		},
+	}
+}
 
 var _ Directive = (*ExtDirective)(nil)
 

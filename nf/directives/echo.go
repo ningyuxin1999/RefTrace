@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (e *EchoDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(e.Line()),
+		Directive: &pb.Directive_Echo{
+			Echo: &pb.EchoDirective{
+				Enabled: e.Enabled,
+			},
+		},
+	}
+}
 
 var _ Directive = (*EchoDirective)(nil)
 

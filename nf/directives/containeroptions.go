@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (c *ContainerOptions) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(c.Line()),
+		Directive: &pb.Directive_ContainerOptions{
+			ContainerOptions: &pb.ContainerOptionsDirective{
+				Options: c.Options,
+			},
+		},
+	}
+}
 
 var _ Directive = (*ContainerOptions)(nil)
 

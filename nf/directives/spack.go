@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (s *SpackDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(s.Line()),
+		Directive: &pb.Directive_Spack{
+			Spack: &pb.SpackDirective{
+				Dependencies: s.Dependencies,
+			},
+		},
+	}
+}
 
 var _ Directive = (*SpackDirective)(nil)
 var _ starlark.Value = (*SpackDirective)(nil)

@@ -6,12 +6,26 @@ import (
 	"hash/fnv"
 	"reft-go/parser"
 
+	pb "reft-go/nf/proto"
+
 	"go.starlark.net/starlark"
 )
 
 var _ Directive = (*Accelerator)(nil)
 var _ starlark.Value = (*Accelerator)(nil)
 var _ starlark.HasAttrs = (*Accelerator)(nil)
+
+func (a *Accelerator) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(a.Line()),
+		Directive: &pb.Directive_Accelerator{
+			Accelerator: &pb.AcceleratorDirective{
+				NumGpus: int32(a.NumGPUs),
+				GpuType: a.GPUType,
+			},
+		},
+	}
+}
 
 func (a *Accelerator) Attr(name string) (starlark.Value, error) {
 	switch name {

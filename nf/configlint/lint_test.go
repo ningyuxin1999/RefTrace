@@ -27,7 +27,7 @@ func TestParseConfig(t *testing.T) {
 		t.Fatalf("Failed to build AST: %v", err)
 	}
 
-	processScopes := parseConfig(ast.StatementBlock)
+	processScopes := ParseConfig(ast.StatementBlock)
 
 	// Basic validation
 	if len(processScopes) == 0 {
@@ -90,7 +90,7 @@ if (!params.skip_bbsplit && params.bbsplit_fasta_list) {
 		t.Fatalf("Failed to build AST: %v", err)
 	}
 
-	processScopes := parseConfig(ast.StatementBlock)
+	processScopes := ParseConfig(ast.StatementBlock)
 	if len(processScopes) != 1 {
 		t.Errorf("Expected 1 process scope declaration, got %d", len(processScopes))
 	}
@@ -121,7 +121,7 @@ func TestParseConfigDuplicateArg(t *testing.T) {
 		t.Fatalf("Failed to build AST: %v", err)
 	}
 
-	processScopes := parseConfig(ast.StatementBlock)
+	processScopes := ParseConfig(ast.StatementBlock)
 	if len(processScopes) != 1 {
 		t.Fatalf("Expected 1 process scope declaration, got %d", len(processScopes))
 	}

@@ -7,7 +7,22 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (c *CacheDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(c.Line()),
+		Directive: &pb.Directive_Cache{
+			Cache: &pb.CacheDirective{
+				Enabled: c.Enabled,
+				Deep:    c.Deep,
+				Lenient: c.Lenient,
+			},
+		},
+	}
+}
 
 var _ Directive = (*CacheDirective)(nil)
 

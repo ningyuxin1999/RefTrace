@@ -1,21 +1,20 @@
 package main
 
-/*
-#include <stdlib.h>
-
-struct ModuleNewResult {
-    unsigned long long handle;
-    char* error;
-};
-*/
+// #include <stdlib.h>
 import "C"
 import (
+	"encoding/base64"
 	"fmt"
 	"reft-go/nf"
+	pb "reft-go/nf/proto"
 	"reft-go/parser"
 	"strings"
 	"unsafe"
+
+	"google.golang.org/protobuf/proto"
 )
+
+func main() {} // Required for C shared library
 
 type Module struct {
 	Path       string
@@ -24,92 +23,47 @@ type Module struct {
 	DSLVersion int
 }
 
-//export Module_New
-func Module_New(filePath *C.char) C.struct_ModuleNewResult {
-	goPath := C.GoString(filePath)
-	module, err := BuildModuleInternal(goPath)
-	if err != nil {
-		errStr := C.CString(err.Error())
-		return C.struct_ModuleNewResult{
-			handle: 0,
-			error:  errStr,
-		}
+func (m *Module) ToProto() *pb.Module {
+	protoModule := &pb.Module{
+		Path:       m.Path,
+		DslVersion: int32(m.DSLVersion),
 	}
 
-	handle := nextModuleHandle
-	nextModuleHandle++
-	moduleStore[handle] = module
-
-	return C.struct_ModuleNewResult{
-		handle: C.ulonglong(handle),
-		error:  nil,
+	for _, p := range m.Processes {
+		protoModule.Processes = append(protoModule.Processes, p.ToProto())
 	}
+
+	return protoModule
 }
 
-//export Module_Free_Error
-func Module_Free_Error(cstr *C.char) {
-	C.free(unsafe.Pointer(cstr))
+//export Module_New
+func Module_New(filePath *C.char) *C.char {
+	goPath := C.GoString(filePath)
+	module, err := BuildModuleInternal(goPath)
+
+	result := &pb.ModuleResult{}
+	if err != nil {
+		result.Result = &pb.ModuleResult_Error{Error: err.Error()}
+	} else {
+		result.Result = &pb.ModuleResult_Module{Module: module.ToProto()}
+	}
+
+	bytes, err := proto.Marshal(result)
+	if err != nil {
+		errorResult := &pb.ModuleResult{
+			Result: &pb.ModuleResult_Error{
+				Error: "serialization error: " + err.Error(),
+			},
+		}
+		bytes, _ = proto.Marshal(errorResult)
+	}
+
+	return C.CString(base64.StdEncoding.EncodeToString(bytes))
 }
 
 //export Module_Free
-func Module_Free(handle ModuleHandle) {
-	if module, ok := moduleStore[handle]; ok {
-		// Free all processes associated with this module
-		for procHandle, proc := range processStore {
-			for i := range module.Processes {
-				if proc == &module.Processes[i] {
-					Process_Free(procHandle)
-					break
-				}
-			}
-		}
-		delete(moduleStore, handle)
-	}
-}
-
-//export Module_GetPath
-func Module_GetPath(handle ModuleHandle) *C.char {
-	if module, ok := moduleStore[handle]; ok {
-		return C.CString(module.Path)
-	}
-	return nil
-}
-
-//export Module_GetDSLVersion
-func Module_GetDSLVersion(handle ModuleHandle) C.int {
-	if module, ok := moduleStore[handle]; ok {
-		return C.int(module.DSLVersion)
-	}
-	return 0
-}
-
-//export Module_GetProcessCount
-func Module_GetProcessCount(handle ModuleHandle) C.int {
-	if module, ok := moduleStore[handle]; ok {
-		return C.int(len(module.Processes))
-	}
-	return 0
-}
-
-//export Module_GetProcess
-func Module_GetProcess(moduleHandle ModuleHandle, index C.int) ProcessHandle {
-	if module, ok := moduleStore[moduleHandle]; ok {
-		if idx := int(index); idx >= 0 && idx < len(module.Processes) {
-			// Check if this process already has a handle
-			process := &module.Processes[idx]
-			for existingHandle, existingProcess := range processStore {
-				if existingProcess == process {
-					return existingHandle
-				}
-			}
-			// If not found, create new handle
-			handle := nextProcessHandle
-			nextProcessHandle++
-			processStore[handle] = process
-			return handle
-		}
-	}
-	return 0
+func Module_Free(ptr *C.char) {
+	C.free(unsafe.Pointer(ptr))
 }
 
 func BuildModuleInternal(filePath string) (*Module, error) {

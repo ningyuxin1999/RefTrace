@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (m *MaxForksDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(m.Line()),
+		Directive: &pb.Directive_MaxForks{
+			MaxForks: &pb.MaxForksDirective{
+				Num: int32(m.Num),
+			},
+		},
+	}
+}
 
 var _ Directive = (*MaxForksDirective)(nil)
 var _ starlark.Value = (*MaxForksDirective)(nil)

@@ -8,7 +8,20 @@ import (
 	"strings"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (s *Shell) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(s.Line()),
+		Directive: &pb.Directive_Shell{
+			Shell: &pb.ShellDirective{
+				Command: s.Command,
+			},
+		},
+	}
+}
 
 var _ Directive = (*Shell)(nil)
 var _ starlark.Value = (*Shell)(nil)

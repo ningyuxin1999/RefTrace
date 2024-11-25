@@ -7,7 +7,26 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (p *PublishDirDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(p.Line()),
+		Directive: &pb.Directive_PublishDir{
+			PublishDir: &pb.PublishDirDirective{
+				Path:        p.Path,
+				Params:      p.Params,
+				ContentType: p.ContentType,
+				Enabled:     p.Enabled,
+				FailOnError: p.FailOnError,
+				Mode:        p.Mode,
+				Overwrite:   p.Overwrite,
+			},
+		},
+	}
+}
 
 var _ Directive = (*PublishDirDirective)(nil)
 var _ starlark.Value = (*PublishDirDirective)(nil)

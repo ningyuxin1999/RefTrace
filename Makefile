@@ -1,7 +1,7 @@
-.PHONY: build test clean lib venv docs
+.PHONY: build test clean lib venv docs proto
 
 # Main targets
-build: lib build-python
+build: proto lib build-python
 
 # Build the shared library
 lib:
@@ -19,24 +19,32 @@ lib:
 build-go:
 	go build ./cmd/reftrace
 
+proto:
+	protoc -I=. --go_out=. --python_out=python/reftrace proto/*
+	
 # Build the Python package
 build-python: lib
 	python3 -m venv build-venv
 	. build-venv/bin/activate && python3 -m pip install --upgrade pip build
 	. build-venv/bin/activate && python3 -m build
-	rm -rf build-venv
+
+dev: lib
+	python3 -m venv venv
+	. venv/bin/activate && \
+		python3 -m pip install --upgrade pip && \
+		python3 -m pip install -e ".[dev]"
 
 test: test-go test-python
 
 test-go:
 	go test ./...
 
-test-python: venv
+test-python: dev
 	. venv/bin/activate && cd python && python3 -m pytest
 
 # doesn't rebuild the venv
 test-python-quick:
-	. venv/bin/activate && cd python && python3 -m pytest
+	. venv/bin/activate && cd python && python3 -m pytest $(ARGS)
 
 venv: build
 	python3 -m venv venv

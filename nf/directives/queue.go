@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (q *QueueDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(q.Line()),
+		Directive: &pb.Directive_Queue{
+			Queue: &pb.QueueDirective{
+				Name: q.Name,
+			},
+		},
+	}
+}
 
 var _ Directive = (*QueueDirective)(nil)
 var _ starlark.Value = (*QueueDirective)(nil)

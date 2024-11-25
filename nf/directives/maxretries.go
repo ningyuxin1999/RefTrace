@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (m *MaxRetriesDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(m.Line()),
+		Directive: &pb.Directive_MaxRetries{
+			MaxRetries: &pb.MaxRetriesDirective{
+				Num: int32(m.Num),
+			},
+		},
+	}
+}
 
 var _ Directive = (*MaxRetriesDirective)(nil)
 var _ starlark.Value = (*MaxRetriesDirective)(nil)

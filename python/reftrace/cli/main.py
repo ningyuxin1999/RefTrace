@@ -52,7 +52,7 @@ def run_lint(directory: str, rules_file: str, debug: bool = False) -> List[LintR
 
     with click.progressbar(nf_files, label='Linting files', show_pos=True) as files:
         for nf_file in files:
-            module = Module(nf_file)
+            module = Module.from_file(nf_file)
             module_results = LintResults(
                 module_path=nf_file,
                 errors=[],

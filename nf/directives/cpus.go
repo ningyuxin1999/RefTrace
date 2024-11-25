@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (c *CpusDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(c.Line()),
+		Directive: &pb.Directive_Cpus{
+			Cpus: &pb.CpusDirective{
+				Num: int32(c.Num),
+			},
+		},
+	}
+}
 
 var _ Directive = (*CpusDirective)(nil)
 

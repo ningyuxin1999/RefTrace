@@ -7,7 +7,29 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (r *ResourceLimitsDirective) ToProto() *pb.Directive {
+	var cpusInt32 *int32
+	if r.Cpus != nil {
+		val := int32(*r.Cpus)
+		cpusInt32 = &val
+	}
+
+	return &pb.Directive{
+		Line: int32(r.Line()),
+		Directive: &pb.Directive_ResourceLimits{
+			ResourceLimits: &pb.ResourceLimitsDirective{
+				Cpus:   cpusInt32,
+				Disk:   r.Disk,
+				Memory: r.Memory,
+				Time:   r.Time,
+			},
+		},
+	}
+}
 
 var _ Directive = (*ResourceLimitsDirective)(nil)
 

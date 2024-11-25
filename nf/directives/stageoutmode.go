@@ -7,7 +7,20 @@ import (
 	"reft-go/parser"
 
 	"go.starlark.net/starlark"
+
+	pb "reft-go/nf/proto"
 )
+
+func (s *StageOutModeDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line: int32(s.Line()),
+		Directive: &pb.Directive_StageOutMode{
+			StageOutMode: &pb.StageOutModeDirective{
+				Mode: s.Mode,
+			},
+		},
+	}
+}
 
 var _ Directive = (*StageOutModeDirective)(nil)
 var _ starlark.Value = (*StageOutModeDirective)(nil)

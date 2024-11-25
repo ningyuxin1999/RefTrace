@@ -13,7 +13,8 @@ authors = [
     {name = "Andrew Stiles", email = "andrew@reftrace.com"},
 ]
 dependencies = [
-    "click>=8.0.0"
+    "click>=8.0.0",
+    "protobuf>=5.28.3"
 ]
 
 [project.scripts]
@@ -21,7 +22,14 @@ reftrace = "reftrace.cli.main:cli"
 
 [tool.setuptools]
 package-dir = {"" = "python"}
-packages = ["reftrace", "reftrace.bindings", "reftrace.cli", "reftrace.linting", "reftrace.fixtures"]
+packages = [
+    "reftrace",
+    "reftrace.bindings",
+    "reftrace.cli",
+    "reftrace.linting",
+    "reftrace.fixtures",
+    "reftrace.proto"
+]
 package-data = { "reftrace.bindings" = ["*.so", "*.dylib", "*.dll"], "reftrace.fixtures" = ["rules.py"] }
 
 [tool.cibuildwheel]

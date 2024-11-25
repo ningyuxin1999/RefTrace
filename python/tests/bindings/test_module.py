@@ -1,7 +1,7 @@
 import pytest
 import tempfile
 from pathlib import Path
-from reftrace import Module
+from reftrace import Module, ContainerDirective
 
 def test_process_and_container():
     # Create temporary file with the same process content
@@ -34,7 +34,7 @@ process CAT_FASTQ {
         tmp.flush()
         
         # Create module from file
-        module = Module(tmp.name)
+        module = Module.from_file(tmp.name)
         
         # Should have one process
         assert len(module.processes) == 1
@@ -42,9 +42,11 @@ process CAT_FASTQ {
         
         # Check process name
         assert process.name == "CAT_FASTQ"
+
+        containers = process.get_directives("container")
         
         # Check container directive
-        containers = [d for d in process.containers if d.format == "ternary"]
+        containers = [c for c in containers if c.format == ContainerDirective.Format.TERNARY]
         assert len(containers) == 1
         container = containers[0]
         
@@ -54,7 +56,7 @@ process CAT_FASTQ {
         assert container.false_name == "nf-core/ubuntu:20.04"
         
         # Add label directive testing
-        labels = [d for d in process.labels]
+        labels = process.get_directives("label")
         assert len(labels) == 1
         label = labels[0]
-        assert label.value == "process_single"
+        assert label.label == "process_single"

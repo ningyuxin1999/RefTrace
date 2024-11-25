@@ -1,73 +1,104 @@
-from .lib import _lib
-from .container import Container
-from .label import Label
+from dataclasses import dataclass
+from typing import Optional, List, ClassVar
+from ..proto import module_pb2
+
+@dataclass
+class DirectiveValue:
+    """Wrapper for directive values that includes the line number while passing through
+    all other attribute access to the underlying protobuf object."""
+    _value: any
+    line: int
+
+    def __getattr__(self, name: str) -> any:
+        """Pass through any attribute access to the underlying protobuf object,
+        except for 'line' which is handled by the dataclass."""
+        return getattr(self._value, name)
+
+@dataclass
 class Process:
-    """Represents a process definition within a module.
-    
-    This class provides access to process properties and its contained directives
-    such as containers and labels.
-    """
+    """Wrapper for protobuf Process message that provides easier access to directives."""
+    _proto: module_pb2.Process
 
-    def __init__(self, handle: int):
-        """Initialize a new Process instance.
-        
-        Args:
-            handle: Internal handle identifier for the process.
-        """
-        self._handle = handle
-
-    def __del__(self):
-        """Cleanup method to free the process handle when the object is destroyed."""
-        if hasattr(self, '_handle'):
-            _lib.Process_Free(self._handle)
+    # All available directive types
+    DIRECTIVE_TYPES: ClassVar[List[str]] = [
+        'accelerator',
+        'after_script',
+        'arch',
+        'array',
+        'before_script',
+        'cache',
+        'cluster_options',
+        'conda',
+        'container',
+        'container_options',
+        'cpus',
+        'debug',
+        'disk',
+        'echo',
+        'error_strategy',
+        'executor',
+        'ext',
+        'fair',
+        'label',
+        'machine_type',
+        'max_submit_await',
+        'max_errors',
+        'max_forks',
+        'max_retries',
+        'memory',
+        'module',
+        'penv',
+        'pod',
+        'publish_dir',
+        'queue',
+        'resource_labels',
+        'resource_limits',
+        'scratch',
+        'shell',
+        'spack',
+        'stage_in_mode',
+        'stage_out_mode',
+        'store_dir',
+        'tag',
+        'time',
+        'dynamic',
+        'unknown'
+    ]
 
     @property
     def name(self) -> str:
-        """Get the name of the process.
-        
-        Returns:
-            str: The name of the process. Returns empty string if name cannot be retrieved.
-        """
-        result = _lib.Process_GetName(self._handle)
-        if result:
-            return result.decode('utf-8')
-        return ""
-    
-    @property
-    def line(self) -> int:
-        """Get the line number where this process is defined.
-        
-        Returns:
-            int: The line number in the source file where this process is defined.
-        """
-        return _lib.Process_GetLine(self._handle)
+        """The name of the process."""
+        return self._proto.name
 
     @property
-    def containers(self) -> list[Container]:
-        """Get all container directives within this process.
+    def line(self) -> int:
+        """The line number where this process is defined."""
+        return self._proto.line
+
+    def get_directives(self, directive_type: str) -> List[DirectiveValue]:
+        """Get all directives of the specified type.
         
+        Args:
+            directive_type: The type of directive to find (e.g., 'tag', 'cpus', etc.)
+            
         Returns:
-            list[Container]: A list of Container objects defined within this process.
+            List of DirectiveValue objects that wrap the directive values and include line numbers
+            
+        Raises:
+            ValueError: If the directive type is not recognized
         """
-        count = _lib.Process_GetDirectiveCount(self._handle)
-        result = []
-        for i in range(count):
-            handle = _lib.Process_GetDirective(self._handle, i)
-            if handle and _lib.Directive_IsContainer(handle):
-                result.append(Container(handle))
-        return result
-    
+        if directive_type not in self.DIRECTIVE_TYPES:
+            raise ValueError(f"Unknown directive type: {directive_type}. "
+                           f"Available types: {', '.join(self.DIRECTIVE_TYPES)}")
+            
+        results = []
+        for directive in self._proto.directives:
+            if directive.WhichOneof('directive') == directive_type:
+                value = getattr(directive, directive_type)
+                results.append(DirectiveValue(_value=value, line=directive.line))
+        return results
+
     @property
-    def labels(self) -> list[Label]:
-        """Get all label directives within this process.
-        
-        Returns:
-            list[Label]: A list of Label objects defined within this process.
-        """
-        count = _lib.Process_GetDirectiveCount(self._handle)
-        result = []
-        for i in range(count):
-            directive_handle = _lib.Process_GetDirective(self._handle, i)
-            if directive_handle and _lib.Directive_IsLabel(directive_handle):
-                result.append(Label(directive_handle))
-        return result
+    def directives(self) -> List[module_pb2.Directive]:
+        """All directives defined in this process."""
+        return list(self._proto.directives)

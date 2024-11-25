@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"hash/fnv"
 
+	pb "reft-go/nf/proto"
+
 	"go.starlark.net/starlark"
 )
 
@@ -57,11 +59,19 @@ const (
 type Directive interface {
 	starlark.Value
 	Line() int
+	ToProto() *pb.Directive
 }
 
 var _ Directive = (*DynamicDirective)(nil)
 var _ starlark.Value = (*DynamicDirective)(nil)
 var _ starlark.HasAttrs = (*DynamicDirective)(nil)
+
+func (d *DynamicDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line:      int32(d.Line()),
+		Directive: &pb.Directive_Dynamic{Dynamic: &pb.DynamicDirective{Name: d.Name}},
+	}
+}
 
 func (d *DynamicDirective) Attr(name string) (starlark.Value, error) {
 	switch name {
@@ -117,6 +127,13 @@ func (d *DynamicDirective) Hash() (uint32, error) {
 var _ Directive = (*UnknownDirective)(nil)
 var _ starlark.Value = (*UnknownDirective)(nil)
 var _ starlark.HasAttrs = (*UnknownDirective)(nil)
+
+func (u *UnknownDirective) ToProto() *pb.Directive {
+	return &pb.Directive{
+		Line:      int32(u.Line()),
+		Directive: &pb.Directive_Unknown{Unknown: &pb.UnknownDirective{Name: u.Name}},
+	}
+}
 
 func (u *UnknownDirective) Attr(name string) (starlark.Value, error) {
 	switch name {
