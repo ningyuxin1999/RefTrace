@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package nf;
+
+option go_package = "nf/proto";
+
+message ConfigFileResult {
+    oneof result {
+      ConfigFile config_file = 1;
+      string error = 2;
+    }
+}
+
+// Represents a Nextflow configuration file
+message ConfigFile {
+  string path = 1;
+  repeated ProcessScope process_scopes = 2;
+}
+
+message ProcessScope {
+  int32 line_number = 1;
+  repeated DirectiveConfig directives = 2;
+  repeated NamedScope named_scopes = 3;
+}
+
+message NamedScope {
+  int32 line_number = 1;
+  string name = 2;
+  repeated DirectiveConfig directives = 3;
+}
+
+message DirectiveConfig {
+  int32 line_number = 1;
+  string name = 2;
+  repeated NamedOption options = 3;
+  DirectiveValue value = 4;
+}
+
+message NamedOption {
+  int32 line_number = 1;
+  string name = 2;
+  DirectiveValue value = 3;
+}
+
+message DirectiveValue {
+  repeated string params = 1;
+  bool in_closure = 2;
+}

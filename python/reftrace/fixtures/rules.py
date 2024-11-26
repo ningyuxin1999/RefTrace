@@ -1,9 +1,56 @@
 import os
 from urllib.parse import urlparse
-from reftrace import Module, ContainerDirective
-from reftrace.linting import ModuleError, ModuleWarning, LintResults, rule
+from reftrace import Module, ContainerDirective, ConfigFile
+from reftrace.linting import LintError, LintWarning, LintResults, rule, configrule
 from typing import Union, Tuple, List
 
+# Config file rules
+
+def directive_violating(directive):
+    """Check if a directive config violates the closure rule"""
+    if directive.value:
+        if value_violating(directive.value):
+            return LintError(
+                directive.line_number,
+                f"Directive {directive.name} violates closure rule")
+    else:
+        for option in directive.options:
+            if option.name == "mode" and directive.name == "publishDir":
+                # mode: of publishDir doesn't accept a closure
+                continue
+            if value_violating(option.value):
+                return LintError(
+                    option.line_number,
+                    f"Directive option {option.name} of directive {directive.name} violates closure rule")
+    return None
+
+def value_violating(directive_value):
+    """Check if a directive value violates the closure rule
+
+    Directive values are the actual content of the directive config.
+    For example:
+    ext.args = '--num_alignments 1 -v'
+    The value is '--num_alignments 1 -v'
+    """
+    # if a directive value does not have params, we don't need a closure
+    if not directive_value.params:
+        return False
+    # if a directive has params, it must be nested in a closure
+    return not directive_value.in_closure
+
+@configrule
+def must_use_closures(config: ConfigFile, results: LintResults):
+    """All directives that use params must be nested in a closure"""
+    for process_scope in config.process_scopes:
+        for directive in process_scope.directives:
+            error = directive_violating(directive)
+            if error:
+                results.errors.append(error)
+        for named_scope in process_scope.named_scopes:
+            for directive in named_scope.directives:
+                error = directive_violating(directive)
+                if error:
+                    results.errors.append(error)
 
 # Process label rules
 
@@ -25,7 +72,7 @@ def conflicting_labels(module: Module, results: LintResults):
         if len(good_labels) > 1:
             label_names = [label.label for label in good_labels]
             results.warnings.append(
-                ModuleWarning(
+                LintWarning(
                     line=process.line,
                     warning=f"process '{process.name}' has conflicting labels: {label_names}"
                 )
@@ -39,7 +86,7 @@ def no_standard_label(module: Module, results: LintResults):
                       if label.label in CORRECT_PROCESS_LABELS]
         if len(good_labels) == 0:
             results.warnings.append(
-                ModuleWarning(
+                LintWarning(
                     line=process.line,
                     warning=f"process '{process.name}' has no standard label"
                 )
@@ -54,7 +101,7 @@ def non_standard_label(module: Module, results: LintResults):
         if bad_labels:
             label_names = [label.label for label in bad_labels]
             results.warnings.append(
-                ModuleWarning(
+                LintWarning(
                     line=process.line,
                     warning=f"process '{process.name}' has non-standard labels: {label_names}"
                 )
@@ -71,7 +118,7 @@ def duplicate_labels(module: Module, results: LintResults):
         for label_name, count in label_count.items():
             if count > 1:
                 results.warnings.append(
-                    ModuleWarning(
+                    LintWarning(
                         line=process.line,
                         warning=f"process '{process.name}' has duplicate label '{label_name}' ({count} times)"
                     )
@@ -83,7 +130,7 @@ def no_labels(module: Module, results: LintResults):
         labels = process.get_directives("label")
         if not labels:
             results.warnings.append(
-                ModuleWarning(
+                LintWarning(
                     line=process.line,
                     warning=f"process '{process.name}' has no labels"
                 )
@@ -103,7 +150,7 @@ def alphanumerics(module: Module, results: LintResults):
         for label in labels:
             if msg := check_fn(label.label):
                 results.warnings.append(
-                    ModuleWarning(
+                    LintWarning(
                         line=label.line,
                         warning=msg
                     )
@@ -141,7 +188,7 @@ def container_with_space(module: Module, results: LintResults):
             for name in container_names(container):
                 if " " in name:
                     results.errors.append(
-                        ModuleError(
+                        LintError(
                             line=container.line,
                             error=f"container name '{name}' contains spaces, which is not allowed"
                         )
@@ -155,7 +202,7 @@ def multiple_containers(module: Module, results: LintResults):
             for name in container_names(container):
                 if "biocontainers/" in name and ("https://containers" in name or "https://depot" in name):
                     results.warnings.append(
-                        ModuleWarning(
+                        LintWarning(
                             line=container.line,
                             warning="Docker and Singularity containers specified on the same line"
                         )
@@ -224,7 +271,7 @@ def must_be_tagged(module: Module, results: LintResults):
                 container_type, error = docker_or_singularity(name)
                 if error:
                     results.errors.append(
-                        ModuleError(
+                        LintError(
                             line=container.line,
                             error=error
                         )
@@ -235,7 +282,7 @@ def must_be_tagged(module: Module, results: LintResults):
                     _, error = get_singularity_tag(name)
                     if error:
                         results.errors.append(
-                            ModuleError(
+                            LintError(
                                 line=container.line,
                                 error=error
                             )
@@ -245,7 +292,7 @@ def must_be_tagged(module: Module, results: LintResults):
                     _, error = get_docker_tag(name)
                     if error:
                         results.errors.append(
-                            ModuleError(
+                            LintError(
                                 line=container.line,
                                 error=error
                             )
@@ -253,7 +300,7 @@ def must_be_tagged(module: Module, results: LintResults):
                     
                     if name.startswith("quay.io"):
                         results.errors.append(
-                            ModuleError(
+                            LintError(
                                 line=container.line,
                                 error=f"container '{name}': please use 'organization/container:tag' format instead of full registry URL"
                             )

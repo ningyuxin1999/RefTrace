@@ -32,3 +32,9 @@ _lib.Module_New.restype = c_void_p
 
 _lib.Module_Free.argtypes = [c_void_p]
 _lib.Module_Free.restype = None
+
+_lib.ConfigFile_New.argtypes = [c_char_p]
+_lib.ConfigFile_New.restype = c_void_p
+
+_lib.ConfigFile_Free.argtypes = [c_void_p]
+_lib.ConfigFile_Free.restype = None

@@ -4,6 +4,8 @@ import (
 	"reft-go/nf"
 	"reft-go/parser"
 	"slices"
+
+	pb "reft-go/nf/proto"
 )
 
 func ParseConfig(block *parser.BlockStatement) []ProcessScope {
@@ -92,6 +94,64 @@ type ProcessScope struct {
 	LineNumber  int
 	Directives  []Directive
 	NamedScopes []NamedScope
+}
+
+func (p *ProcessScope) ToProto() *pb.ProcessScope {
+	protoScope := &pb.ProcessScope{
+		LineNumber: int32(p.LineNumber),
+	}
+
+	for _, directive := range p.Directives {
+		protoScope.Directives = append(protoScope.Directives, directive.ToProto())
+	}
+
+	for _, namedScope := range p.NamedScopes {
+		protoScope.NamedScopes = append(protoScope.NamedScopes, namedScope.ToProto())
+	}
+
+	return protoScope
+}
+
+func (d *Directive) ToProto() *pb.DirectiveConfig {
+	protoDirective := &pb.DirectiveConfig{
+		LineNumber: int32(d.LineNumber),
+		Name:       d.Name,
+		Value:      d.Value.ToProto(),
+	}
+
+	for _, option := range d.Options {
+		protoDirective.Options = append(protoDirective.Options, option.ToProto())
+	}
+
+	return protoDirective
+}
+
+func (n *NamedScope) ToProto() *pb.NamedScope {
+	protoNamedScope := &pb.NamedScope{
+		LineNumber: int32(n.LineNumber),
+		Name:       n.Name,
+	}
+
+	for _, directive := range n.Directives {
+		protoNamedScope.Directives = append(protoNamedScope.Directives, directive.ToProto())
+	}
+
+	return protoNamedScope
+}
+
+func (n *NamedOption) ToProto() *pb.NamedOption {
+	return &pb.NamedOption{
+		LineNumber: int32(n.LineNumber),
+		Name:       n.Name,
+		Value:      n.Value.ToProto(),
+	}
+}
+
+func (d *DirectiveValue) ToProto() *pb.DirectiveValue {
+	return &pb.DirectiveValue{
+		Params:    d.Params,
+		InClosure: d.InClosure,
+	}
 }
 
 type Pair[F any, S any] struct {

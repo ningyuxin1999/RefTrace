@@ -7,11 +7,11 @@ from typing import List, Callable
 from importlib.metadata import version
 import pkgutil
 
-from reftrace import Module
-from reftrace.linting import ModuleError, ModuleWarning, LintResults, rule
+from reftrace import Module, ConfigFile
+from reftrace.linting import LintError, LintWarning, LintResults, rule, configrule
 
-def load_rules(rules_file: str = "rules.py") -> List[Callable]:
-    """Load rules from rules.py using the decorator"""
+def load_rules(rules_file: str = "rules.py") -> tuple[List[Callable], List[Callable]]:
+    """Load rules from rules.py using the decorators"""
     if not os.path.exists(rules_file):
         click.secho(f"{rules_file} not found", fg="red")
         sys.exit(1)
@@ -19,38 +19,49 @@ def load_rules(rules_file: str = "rules.py") -> List[Callable]:
     spec = importlib.util.spec_from_file_location("rules", rules_file)
     rules_module = importlib.util.module_from_spec(spec)
 
-    # Inject necessary classes and the decorator into the module's namespace
+    # Inject necessary classes and decorators into the module's namespace
     rules_module.Module = Module
-    rules_module.ModuleError = ModuleError
-    rules_module.ModuleWarning = ModuleWarning
+    rules_module.ConfigFile = ConfigFile
+    rules_module.LintError = LintError
+    rules_module.LintWarning = LintWarning
     rules_module.LintResults = LintResults
     rules_module.rule = rule
+    rules_module.configrule = configrule
 
     spec.loader.exec_module(rules_module)
 
-    # Find all functions decorated with @rule
-    rules = []
+    # Find all functions decorated with @rule or @configrule
+    module_rules = []
+    config_rules = []
     for name in dir(rules_module):
         obj = getattr(rules_module, name)
         if callable(obj) and hasattr(obj, '__wrapped__'):
-            rules.append(obj)
+            if hasattr(obj, '_is_config_rule'):
+                config_rules.append(obj)
+            else:
+                module_rules.append(obj)
 
-    if not rules:
+    if not (module_rules or config_rules):
         click.secho(f"No rules registered in {rules_file}", fg="yellow")
 
-    return rules
+    return module_rules, config_rules
 
 def find_nf_files(directory: str) -> List[str]:
     """Recursively find all .nf files in directory"""
     return [str(p) for p in Path(directory).rglob("*.nf")]
 
+def find_config_files(directory: str) -> List[str]:
+    """Recursively find all .config files in directory"""
+    return [str(p) for p in Path(directory).rglob("*.config")]
+
 def run_lint(directory: str, rules_file: str, debug: bool = False) -> List[LintResults]:
     """Main linting function with optional debug"""
     results = []
-    rules = load_rules(rules_file)
+    module_rules, config_rules = load_rules(rules_file)
+    
+    # Lint Nextflow files
     nf_files = find_nf_files(directory)
-
-    with click.progressbar(nf_files, label='Linting files', show_pos=True) as files:
+    with click.progressbar(nf_files, label='Linting Nextflow files', show_pos=True) as files:
         for nf_file in files:
             module = Module.from_file(nf_file)
             module_results = LintResults(
@@ -59,7 +70,7 @@ def run_lint(directory: str, rules_file: str, debug: bool = False) -> List[LintR
                 warnings=[]
             )
 
-            for rule in rules:
+            for rule in module_rules:
                 if debug:
                     click.echo(f"Running {rule.__name__} on {nf_file}")
 
@@ -68,6 +79,27 @@ def run_lint(directory: str, rules_file: str, debug: bool = False) -> List[LintR
                 module_results.warnings.extend(rule_result.warnings)
 
             results.append(module_results)
+
+    # Lint config files
+    config_files = find_config_files(directory)
+    with click.progressbar(config_files, label='Linting config files', show_pos=True) as files:
+        for config_file in files:
+            config = ConfigFile.from_file(config_file)
+            config_results = LintResults(
+                module_path=config_file,
+                errors=[],
+                warnings=[]
+            )
+
+            for rule in config_rules:
+                if debug:
+                    click.echo(f"Running {rule.__name__} on {config_file}")
+
+                rule_result = rule(config)
+                config_results.errors.extend(rule_result.errors)
+                config_results.warnings.extend(rule_result.warnings)
+
+            results.append(config_results)
 
     return results
 

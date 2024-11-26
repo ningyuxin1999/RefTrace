@@ -1,11 +1,13 @@
 from .bindings.module import Module
 from .bindings.process import Process
+from .bindings.config_file import ConfigFile
 from .proto import module_pb2
 
 __all__ = [
     # Core classes
     'Module',
     'Process',
+    'ConfigFile',
     
     # All directive types
     'AcceleratorDirective',
