@@ -1,4 +1,4 @@
-.PHONY: build test clean lib venv docs proto
+.PHONY: build test clean lib venv docs proto setup-deps
 
 # Main targets
 build: proto lib build-python
@@ -14,6 +14,9 @@ lib:
 			-o python/reftrace/bindings/libreftrace.so \
 			./pkg/capi; \
 	fi
+
+setup-deps:
+	python3 scripts/setup_deps.py
 
 # Build the CLI tool
 build-go:

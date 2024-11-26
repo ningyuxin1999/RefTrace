@@ -39,44 +39,9 @@ jobs:
           CIBW_ARCHS_MACOS: "arm64"
           CIBW_BUILD_VERBOSITY: 1
 
-          # Install Go in BEFORE_ALL
-          CIBW_BEFORE_ALL: |
-            set -e
-
-            # Install Go
-            GO_VERSION=1.22.0
-            INSTALL_DIR="$PWD/go"
-            if [[ "$(uname)" == "Linux" ]]; then
-              GO_TARBALL=go$GO_VERSION.linux-amd64.tar.gz
-            elif [[ "$(uname)" == "Darwin" ]]; then
-              if [[ "$(uname -m)" == "arm64" ]]; then
-                GO_TARBALL=go$GO_VERSION.darwin-arm64.tar.gz
-              else
-                GO_TARBALL=go$GO_VERSION.darwin-amd64.tar.gz
-              fi
-            fi
-
-            # Create the installation directory before downloading
-            mkdir -p "$INSTALL_DIR"
-
-            # Download the Go tarball
-            curl -L -o "$INSTALL_DIR/$GO_TARBALL" "https://golang.org/dl/$GO_TARBALL"
-
-            # Extract the tarball
-            tar -C "$INSTALL_DIR" --strip-components=1 -xzf "$INSTALL_DIR/$GO_TARBALL"
-            export GOROOT="$INSTALL_DIR"
-            export PATH="$GOROOT/bin:$PATH"
-
-            # Verify Go installation
-            go version
-
           # Install Java and build on Linux
           CIBW_BEFORE_BUILD_LINUX: |
             set -e
-
-            # Ensure Go is in the PATH
-            export GOROOT="$PWD/go"
-            export PATH="$GOROOT/bin:$PATH"
 
             # Install Java
             JAVA_VERSION=17
@@ -93,6 +58,19 @@ jobs:
 
             # Verify Java installation
             java -version
+
+            # Install Go dependencies
+            make setup-deps
+
+            # Add protoc to PATH
+            export PATH="$PWD/protoc/bin:$PATH"
+            # Add go to PATH
+            export PATH="$PWD/go/bin:$PATH"
+            # Add GOPATH/bin to PATH
+            export PATH="$(go env GOPATH)/bin:$PATH"
+
+            # Generate protocol buffers
+            make proto
 
             # Run go generate
             go generate ./...
@@ -113,9 +91,17 @@ jobs:
           CIBW_BEFORE_BUILD_MACOS: |
             set -e
 
-            # Ensure Go is in the PATH
-            export GOROOT="$PWD/go"
-            export PATH="$GOROOT/bin:$PATH"
+            make setup-deps
+
+            # Add protoc to PATH
+            export PATH="$PWD/protoc/bin:$PATH"
+            # Add go to PATH
+            export PATH="$PWD/go/bin:$PATH"
+            # Add GOPATH/bin to PATH
+            export PATH="$(go env GOPATH)/bin:$PATH"
+
+            # Generate protocol buffers
+            make proto
 
             # Run go generate
             go generate ./...
@@ -127,9 +113,6 @@ jobs:
 
           # Environment variables for both Linux and macOS
           CIBW_ENVIRONMENT: |
-            # Ensure Go is in the PATH during build and test
-            GOROOT="$PWD/go"
-            PATH="$GOROOT/bin:$PATH"
             LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PWD/python/reftrace/bindings"
             DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:$PWD/python/reftrace/bindings"
 
