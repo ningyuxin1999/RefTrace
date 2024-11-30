@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from typing import Optional, List, ClassVar
+from functools import cached_property
 from ..proto import module_pb2
+from ..directives import Container
+from ..directives import Label
 
 @dataclass
 class DirectiveValue:
@@ -102,3 +105,34 @@ class Process:
     def directives(self) -> List[module_pb2.Directive]:
         """All directives defined in this process."""
         return list(self._proto.directives)
+
+    # Label directives
+    @cached_property
+    def labels(self) -> List[Label]:
+        """Labels attached to this process."""
+        return [
+            Label(_value=getattr(d, 'label'), line=d.line)
+            for d in self._proto.directives
+            if d.WhichOneof('directive') == 'label'
+        ]
+
+    # Container directives
+    @cached_property
+    def containers(self) -> List[Container]:  # renamed from container for consistency
+        """Container specifications for this process."""
+        return [
+            Container(_value=getattr(d, 'container'), line=d.line)
+            for d in self._proto.directives
+            if d.WhichOneof('directive') == 'container'
+        ]
+
+    # Convenience methods for single directives
+    @property
+    def first_label(self) -> Optional[Label]:
+        """First label directive or None."""
+        return self.labels[0] if self.labels else None
+
+    @property
+    def first_container(self) -> Optional[Container]:
+        """First container directive or None."""
+        return self.containers[0] if self.containers else None

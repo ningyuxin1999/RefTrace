@@ -1,6 +1,7 @@
 import os
 from urllib.parse import urlparse
-from reftrace import Module, ContainerDirective, ConfigFile
+from reftrace import Module, ConfigFile
+from reftrace.directives import Container, ContainerFormat
 from reftrace.linting import LintError, LintWarning, LintResults, rule, configrule
 from typing import Union, Tuple, List
 
@@ -66,7 +67,7 @@ CORRECT_PROCESS_LABELS = [
 @rule
 def conflicting_labels(module: Module, results: LintResults):
     for process in module.processes:
-        labels = process.get_directives("label")
+        labels = process.labels
         good_labels = [label for label in labels 
                       if label.label in CORRECT_PROCESS_LABELS]
         if len(good_labels) > 1:
@@ -81,7 +82,7 @@ def conflicting_labels(module: Module, results: LintResults):
 @rule
 def no_standard_label(module: Module, results: LintResults):
     for process in module.processes:
-        labels = process.get_directives("label")
+        labels = process.labels
         good_labels = [label for label in labels 
                       if label.label in CORRECT_PROCESS_LABELS]
         if len(good_labels) == 0:
@@ -95,7 +96,7 @@ def no_standard_label(module: Module, results: LintResults):
 @rule
 def non_standard_label(module: Module, results: LintResults):
     for process in module.processes:
-        labels = process.get_directives("label")
+        labels = process.labels
         bad_labels = [label for label in labels 
                      if label.label not in CORRECT_PROCESS_LABELS]
         if bad_labels:
@@ -110,7 +111,7 @@ def non_standard_label(module: Module, results: LintResults):
 @rule
 def duplicate_labels(module: Module, results: LintResults):
     for process in module.processes:
-        labels = process.get_directives("label")
+        labels = process.labels
         label_count = {}
         for label in labels:
             label_count[label.label] = label_count.get(label.label, 0) + 1
@@ -127,7 +128,7 @@ def duplicate_labels(module: Module, results: LintResults):
 @rule
 def no_labels(module: Module, results: LintResults):
     for process in module.processes:
-        labels = process.get_directives("label")
+        labels = process.labels
         if not labels:
             results.warnings.append(
                 LintWarning(
@@ -146,7 +147,7 @@ def alphanumerics(module: Module, results: LintResults):
         return ""
     
     for process in module.processes:
-        labels = process.get_directives("label")
+        labels = process.labels
         for label in labels:
             if msg := check_fn(label.label):
                 results.warnings.append(
@@ -158,7 +159,7 @@ def alphanumerics(module: Module, results: LintResults):
 
 # Container rules
 
-def container_names(container: ContainerDirective) -> List[str]:
+def container_names(container: Container) -> List[str]:
     """Get all container names based on the format.
     
     Args:
@@ -169,9 +170,9 @@ def container_names(container: ContainerDirective) -> List[str]:
                   returns a single-item list. For ternary containers, returns both true
                   and false branch names if they exist.
     """
-    if container.format == ContainerDirective.Format.SIMPLE:
+    if container.format == ContainerFormat.SIMPLE:
         return [container.simple_name] if container.simple_name else []
-    elif container.format == ContainerDirective.Format.TERNARY:
+    elif container.format == ContainerFormat.TERNARY:
         names = []
         if container.true_name:
             names.append(container.true_name)
@@ -183,7 +184,7 @@ def container_names(container: ContainerDirective) -> List[str]:
 @rule
 def container_with_space(module: Module, results: LintResults):
     for process in module.processes:
-        containers = process.get_directives("container")
+        containers = process.containers
         for container in containers:
             for name in container_names(container):
                 if " " in name:
@@ -197,7 +198,7 @@ def container_with_space(module: Module, results: LintResults):
 @rule
 def multiple_containers(module: Module, results: LintResults):
     for process in module.processes:
-        containers = process.get_directives("container")
+        containers = process.containers
         for container in containers:
             for name in container_names(container):
                 if "biocontainers/" in name and ("https://containers" in name or "https://depot" in name):
@@ -265,7 +266,7 @@ def docker_or_singularity(container_name: str) -> Tuple[str, Union[str, None]]:
 @rule
 def must_be_tagged(module: Module, results: LintResults):
     for process in module.processes:
-        containers = process.get_directives("container")
+        containers = process.containers
         for container in containers:
             for name in container_names(container):
                 container_type, error = docker_or_singularity(name)
