@@ -30,3 +30,4 @@ nf/proto
 build-venv/
 dist/
 python/reftrace/proto/
+docs/build/

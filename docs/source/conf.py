@@ -8,7 +8,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../python'))
+sys.path.insert(0, os.path.abspath('../../python'))
 
 project = 'RefTrace'
 copyright = '2024'
@@ -24,11 +24,6 @@ extensions = [
     'autodocsumm'
 ]
 
-# Autodoc settings
-autodoc_default_options = {
-    'members': True,
-    'imported-members': True
-}
 
 napoleon_use_rtype = False
 
@@ -37,18 +32,30 @@ autodoc_typehints = 'signature'
 # don't show signatures for classes
 autodoc_class_signature = 'separated'
 
-# Mock the C extension
-autodoc_mock_imports = ['libreftrace']
-
 markdown_anchor_signatures= True
 
 autodocsumm_section_sorter = False
 
-def skip_init(app, what, name, obj, skip, options):
-    if name == "__init__" and what == "class" and obj.__qualname__ != "Module.__init__":
-        return True
-    return skip
+# Add autosummary settings
+# autosummary_generate = True  # Generate stub pages
+add_module_names = False     # Don't prefix with module names
 
-def setup(app):
-    app.connect('autodoc-skip-member', skip_init)
+# Mock the protobuf modules and specific classes
+autodoc_mock_imports = [
+    'libreftrace',  # The C extension
+    'proto.config_file_pb2',
+    'proto.module_pb2',
+    'proto.config_file_pb2.ConfigFile',
+    'proto.config_file_pb2.ProcessScope',
+    'proto.module_pb2.Module',
+    'proto.module_pb2.Process',
+    'proto'
+]
 
+# Important for handling aliases
+autoclass_content = 'class'  # Only use class docstring, not __init__
+autodoc_inherit_docstrings = True
+autodoc_member_order = 'bysource'
+
+# Don't be so strict about references
+nitpicky = False

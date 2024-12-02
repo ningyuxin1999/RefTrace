@@ -65,7 +65,11 @@ clean-venv:
 clean-build-env:
 	rm -rf build-venv
 
-docs:
-	rm -rf _build docs/_autosummary
-	sphinx-build -b markdown docs _build/markdown
-	python3 scripts/transform_docs.py _build/markdown/index.md
+docs-md:
+	rm -rf _build docs/source/_autosummary docs/build
+	sphinx-build -b markdown docs/source docs/build
+	# python3 scripts/transform_docs.py _build/markdown/index.md
+
+docs-html:
+	rm -rf _build docs/source/_autosummary docs/build
+	sphinx-build -M html docs/source docs/build
