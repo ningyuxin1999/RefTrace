@@ -23,6 +23,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # Download the ANTLR jar file into the parser directory
       - name: Download ANTLR jar
