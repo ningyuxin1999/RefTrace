@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "reftrace"
-version = "0.4.3"
+dynamic = ["version"]
 description = "Lint Nextflow pipelines in Python"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -16,6 +16,9 @@ dependencies = [
     "click>=8.0.0",
     "protobuf>=5.28.3"
 ]
+
+[tool.setuptools_scm]
+write_to = "python/reftrace/_version.py"
 
 [project.scripts]
 reftrace = "reftrace.cli.main:cli"
