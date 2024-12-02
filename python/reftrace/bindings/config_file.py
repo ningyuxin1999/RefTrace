@@ -5,7 +5,7 @@ import base64
 from typing import List
 from dataclasses import dataclass
 from functools import cached_property
-from ..proto import config_file_pb2
+from ..configfile import ProcessScope
 
 @dataclass
 class ConfigFile:
@@ -40,6 +40,6 @@ class ConfigFile:
         return self._proto.path
 
     @cached_property
-    def process_scopes(self) -> List[config_file_pb2.ProcessScope]:
+    def process_scopes(self) -> list[ProcessScope]:
         """All process scopes defined in this config file."""
-        return self._proto.process_scopes
+        return [ProcessScope(scope) for scope in self._proto.process_scopes]
