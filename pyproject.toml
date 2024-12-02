@@ -14,7 +14,7 @@ authors = [
 ]
 dependencies = [
     "click>=8.0.0",
-    "protobuf>=5.28.3"
+    "protobuf>=4.21.0"
 ]
 
 [tool.setuptools_scm]
