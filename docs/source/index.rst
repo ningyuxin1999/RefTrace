@@ -7,6 +7,9 @@ This has the core classes.
 Individual directives are available under the ``reftrace.directives`` namespace.
 Parts of the configuration file are available under the ``reftrace.configfile`` namespace.
 
+API version:
+|release|
+
 Core Classes
 ------------
 

@@ -8,11 +8,15 @@
 
 import os
 import sys
+from importlib.metadata import version
 sys.path.insert(0, os.path.abspath('../../python'))
 
 project = 'RefTrace'
 copyright = '2024'
 author = 'Andrew Stiles'
+
+release = version('reftrace')
+version = '.'.join(release.split('.')[:2])
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
