@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from ..proto import module_pb2
 from .base import Directive
 
+__all__ = ['Accelerator']
+
 @dataclass(frozen=True)
-class AcceleratorDirective(Directive):
+class Accelerator(Directive):
     """The 'accelerator' directive specifies GPU requirements."""
     _value: module_pb2.AcceleratorDirective
 

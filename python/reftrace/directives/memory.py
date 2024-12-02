@@ -3,7 +3,7 @@ from ..proto import module_pb2
 from .base import Directive
 
 @dataclass(frozen=True)
-class MemoryDirective(Directive):
+class Memory(Directive):
     """The 'memory' directive specifies memory requirements."""
     _value: module_pb2.MemoryDirective
 
@@ -11,3 +11,5 @@ class MemoryDirective(Directive):
     def memory_gb(self) -> float:
         """The memory requirement in gigabytes."""
         return self._value.memory_gb
+
+__all__ = ['Memory']

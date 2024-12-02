@@ -3,7 +3,7 @@ from ..proto import module_pb2
 from .base import Directive
 
 @dataclass(frozen=True)
-class MaxRetriesDirective(Directive):
+class MaxRetries(Directive):
     """The 'maxRetries' directive specifies the maximum number of retry attempts."""
     _value: module_pb2.MaxRetriesDirective
 
@@ -11,3 +11,5 @@ class MaxRetriesDirective(Directive):
     def num(self) -> int:
         """The maximum number of retry attempts allowed."""
         return self._value.num
+
+__all__ = ['MaxRetries']

@@ -3,7 +3,7 @@ from ..proto import module_pb2
 from .base import Directive
 
 @dataclass(frozen=True)
-class ExtDirective(Directive):
+class Ext(Directive):
     """The 'ext' directive specifies extension configuration."""
     _value: module_pb2.ExtDirective
 
@@ -16,3 +16,5 @@ class ExtDirective(Directive):
     def args(self) -> str:
         """The extension arguments."""
         return self._value.args
+
+__all__ = ['Ext']

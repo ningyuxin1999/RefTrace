@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from ..proto import module_pb2
 from .base import Directive
 
+__all__ = ['Shell']
 @dataclass(frozen=True)
-class ShellDirective(Directive):
+class Shell(Directive):
     """The 'shell' directive specifies the shell to use for script execution."""
     _value: module_pb2.ShellDirective
 

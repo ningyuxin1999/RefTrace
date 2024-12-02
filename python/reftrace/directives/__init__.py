@@ -1,92 +1,135 @@
 """Directive types for Nextflow process analysis."""
 
-from .accelerator import AcceleratorDirective as Accelerator
-from .afterscript import AfterScriptDirective as AfterScript
-from .arch import ArchDirective as Arch
-from .array import ArrayDirective as Array
-from .beforescript import BeforeScriptDirective as BeforeScript
-from .cache import CacheDirective as Cache
-from .clusteroptions import ClusterOptionsDirective as ClusterOptions
-from .conda import CondaDirective as Conda
-from .container import ContainerDirective as Container, ContainerFormat
-from .containeroptions import ContainerOptionsDirective as ContainerOptions
-from .cpus import CpusDirective as Cpus
-from .debug import DebugDirective as Debug
-from .disk import DiskDirective as Disk
-from .dynamic import DynamicDirective as Dynamic
-from .echo import EchoDirective as Echo
-from .errorstrategy import ErrorStrategyDirective as ErrorStrategy
-from .executor import ExecutorDirective as Executor
-from .ext import ExtDirective as Ext
-from .fair import FairDirective as Fair
-from .label import LabelDirective as Label
-from .machinetype import MachineTypeDirective as MachineType
-from .maxerrors import MaxErrorsDirective as MaxErrors
-from .maxforks import MaxForksDirective as MaxForks
-from .maxretries import MaxRetriesDirective as MaxRetries
-from .maxsubmitawait import MaxSubmitAwaitDirective as MaxSubmitAwait
-from .memory import MemoryDirective as Memory
-from .module import ModuleDirective as Module
-from .penv import PenvDirective as Penv
-from .pod import PodDirective as Pod
-from .publishdir import PublishDirDirective as PublishDir
-from .queue import QueueDirective as Queue
-from .resourcelabels import ResourceLabelsDirective as ResourceLabels
-from .resourcelimits import ResourceLimitsDirective as ResourceLimits
-from .scratch import ScratchDirective as Scratch
-from .shell import ShellDirective as Shell
-from .spack import SpackDirective as Spack
-from .stageinmode import StageInModeDirective as StageInMode
-from .stageoutmode import StageOutModeDirective as StageOutMode
-from .storedir import StoreDirDirective as StoreDir
-from .tag import TagDirective as Tag
-from .time import TimeDirective as Time
-from .unknown import UnknownDirective as Unknown
+# Import submodules
+from . import accelerator
+from . import afterscript
+from . import arch
+from . import array
+from . import beforescript
+from . import cache
+from . import clusteroptions
+from . import conda
+from . import container
+from . import containeroptions
+from . import cpus
+from . import debug
+from . import disk
+from . import dynamic
+from . import echo
+from . import errorstrategy
+from . import executor
+from . import ext
+from . import fair
+from . import label
+from . import machinetype
+from . import maxerrors
+from . import maxforks
+from . import maxretries
+from . import maxsubmitawait
+from . import memory
+from . import module
+from . import penv
+from . import pod
+from . import publishdir
+from . import queue
+from . import resourcelabels
+from . import resourcelimits
+from . import scratch
+from . import shell
+from . import spack
+from . import stageinmode
+from . import stageoutmode
+from . import storedir
+from . import tag
+from . import time
+from . import unknown
 
+# Import all public names from submodules
+from .accelerator import *
+from .afterscript import *
+from .arch import *
+from .array import *
+from .beforescript import *
+from .cache import *
+from .clusteroptions import *
+from .conda import *
+from .container import *
+from .containeroptions import *
+from .cpus import *
+from .debug import *
+from .disk import *
+from .dynamic import *
+from .echo import *
+from .errorstrategy import *
+from .executor import *
+from .ext import *
+from .fair import *
+from .label import *
+from .machinetype import *
+from .maxerrors import *
+from .maxforks import *
+from .maxretries import *
+from .maxsubmitawait import *
+from .memory import *
+from .module import *
+from .penv import *
+from .pod import *
+from .publishdir import *
+from .queue import *
+from .resourcelabels import *
+from .resourcelimits import *
+from .scratch import *
+from .shell import *
+from .spack import *
+from .stageinmode import *
+from .stageoutmode import *
+from .storedir import *
+from .tag import *
+from .time import *
+from .unknown import *
 
-__all__ = [
-    # Directive types
-    'Accelerator',
-    'AfterScript',
-    'Arch',
-    'Array',
-    'BeforeScript',
-    'Cache',
-    'ClusterOptions',
-    'Conda',
-    'Container',
-    'ContainerFormat',
-    'ContainerOptions',
-    'Cpus',
-    'Debug',
-    'Disk',
-    'Dynamic',
-    'Echo',
-    'ErrorStrategy',
-    'Executor',
-    'Ext',
-    'Fair',
-    'Label',
-    'MachineType',
-    'MaxErrors',
-    'MaxForks',
-    'MaxRetries',
-    'MaxSubmitAwait',
-    'Memory',
-    'Module',
-    'Penv',
-    'Pod',
-    'PublishDir',
-    'Queue',
-    'ResourceLabels',
-    'ResourceLimits',
-    'Scratch',
-    'Shell',
-    'Spack',
-    'StageInMode',
-    'StageOutMode',
-    'StoreDir',
-    'Tag',
-    'Time',
-    'Unknown',
-]
+# Collect __all__ from submodules
+__all__ = (
+    accelerator.__all__ +
+    afterscript.__all__ +
+    arch.__all__ +
+    array.__all__ +
+    beforescript.__all__ +
+    cache.__all__ +
+    clusteroptions.__all__ +
+    conda.__all__ +
+    container.__all__ +
+    containeroptions.__all__ +
+    cpus.__all__ +
+    debug.__all__ +
+    disk.__all__ +
+    dynamic.__all__ +
+    echo.__all__ +
+    errorstrategy.__all__ +
+    executor.__all__ +
+    ext.__all__ +
+    fair.__all__ +
+    label.__all__ +
+    machinetype.__all__ +
+    maxerrors.__all__ +
+    maxforks.__all__ +
+    maxretries.__all__ +
+    maxsubmitawait.__all__ +
+    memory.__all__ +
+    module.__all__ +
+    penv.__all__ +
+    pod.__all__ +
+    publishdir.__all__ +
+    queue.__all__ +
+    resourcelabels.__all__ +
+    resourcelimits.__all__ +
+    scratch.__all__ +
+    shell.__all__ +
+    spack.__all__ +
+    stageinmode.__all__ +
+    stageoutmode.__all__ +
+    storedir.__all__ +
+    tag.__all__ +
+    time.__all__ +
+    unknown.__all__
+)

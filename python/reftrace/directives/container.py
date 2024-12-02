@@ -3,13 +3,15 @@ from enum import Enum
 from ..proto import module_pb2
 from .base import Directive
 
+__all__ = ['Container', 'ContainerFormat']
+
 class ContainerFormat(Enum):
     """Container directive format types."""
     SIMPLE = 0
     TERNARY = 1
 
 @dataclass(frozen=True)
-class ContainerDirective(Directive):
+class Container(Directive):
     """The 'container' directive specifies the container image to use."""
     _value: module_pb2.ContainerDirective
 

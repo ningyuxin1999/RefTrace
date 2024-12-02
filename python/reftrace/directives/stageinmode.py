@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from ..proto import module_pb2
 from .base import Directive
 
+__all__ = ['StageInMode']
+
 @dataclass(frozen=True)
-class StageInModeDirective(Directive):
+class StageInMode(Directive):
     """The 'stageInMode' directive specifies how input files should be staged."""
     _value: module_pb2.StageInModeDirective
 

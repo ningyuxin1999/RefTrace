@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from ..proto import module_pb2
 from .base import Directive
 
+__all__ = ['Cache']
 @dataclass(frozen=True)
-class CacheDirective(Directive):
+class Cache(Directive):
     """The 'cache' directive controls process-level caching behavior."""
     _value: module_pb2.CacheDirective
 

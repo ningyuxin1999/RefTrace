@@ -3,7 +3,7 @@ from ..proto import module_pb2
 from .base import Directive
 
 @dataclass(frozen=True)
-class DebugDirective(Directive):
+class Debug(Directive):
     """The 'debug' directive enables or disables debug mode for a process."""
     _value: module_pb2.DebugDirective
 
@@ -11,3 +11,5 @@ class DebugDirective(Directive):
     def enabled(self) -> bool:
         """Whether debug mode is enabled."""
         return self._value.enabled
+
+__all__ = ['Debug']

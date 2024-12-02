@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from ..proto import module_pb2
 from .base import Directive
 
+__all__ = ['AfterScript']
+
 @dataclass(frozen=True)
-class AfterScriptDirective(Directive):
+class AfterScript(Directive):
     """The 'afterScript' directive specifies a script to run after the main process."""
     _value: module_pb2.AfterScriptDirective
 

@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from ..proto import module_pb2
 from .base import Directive
 
+__all__ = ['Array']
+
 @dataclass(frozen=True)
-class ArrayDirective(Directive):
+class Array(Directive):
     """The 'array' directive specifies array job size."""
     _value: module_pb2.ArrayDirective
 

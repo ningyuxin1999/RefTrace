@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from ..proto import module_pb2
 from .base import Directive
 
+__all__ = ['Arch']
+
 @dataclass(frozen=True)
-class ArchDirective(Directive):
+class Arch(Directive):
     """The 'arch' directive specifies architecture requirements."""
     _value: module_pb2.ArchDirective
 

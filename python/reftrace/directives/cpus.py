@@ -3,7 +3,7 @@ from ..proto import module_pb2
 from .base import Directive
 
 @dataclass(frozen=True)
-class CpusDirective(Directive):
+class Cpus(Directive):
     """The 'cpus' directive specifies CPU requirements."""
     _value: module_pb2.CpusDirective
 
@@ -11,3 +11,5 @@ class CpusDirective(Directive):
     def value(self) -> int:
         """Number of CPUs requested."""
         return self._value.value
+
+__all__ = ['Cpus']

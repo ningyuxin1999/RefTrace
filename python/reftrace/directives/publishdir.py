@@ -4,7 +4,7 @@ from ..proto import module_pb2
 from .base import Directive
 
 @dataclass(frozen=True)
-class PublishDirDirective(Directive):
+class PublishDir(Directive):
     """The 'publishDir' directive specifies where to publish output files."""
     _value: module_pb2.PublishDirDirective
 
@@ -42,3 +42,5 @@ class PublishDirDirective(Directive):
     def overwrite(self) -> Optional[bool]:
         """Whether to overwrite existing files."""
         return self._value.overwrite if self._value.HasField('overwrite') else None
+
+__all__ = ['PublishDir']

@@ -4,7 +4,7 @@ from ..proto import module_pb2
 from .base import Directive
 
 @dataclass(frozen=True)
-class ResourceLabelsDirective(Directive):
+class ResourceLabels(Directive):
     """The 'resourceLabels' directive specifies labels for resources."""
     _value: module_pb2.ResourceLabelsDirective
 
@@ -12,3 +12,5 @@ class ResourceLabelsDirective(Directive):
     def labels(self) -> Dict[str, str]:
         """The resource labels as a dictionary."""
         return dict(self._value.labels)
+
+__all__ = ['ResourceLabels']

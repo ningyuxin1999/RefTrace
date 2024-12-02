@@ -3,8 +3,9 @@ from typing import List
 from ..proto import module_pb2
 from .base import Directive
 
+__all__ = ['Conda']
 @dataclass(frozen=True)
-class CondaDirective(Directive):
+class Conda(Directive):
     """The 'conda' directive specifies Conda environment requirements."""
     _value: module_pb2.CondaDirective
 
