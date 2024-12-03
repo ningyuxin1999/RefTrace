@@ -43,3 +43,9 @@ go test ./...
 ```
 
 There are two sets of tests: `reft-go/nf` tests the exposing of the Nextflow DSL to linting rules. `reft-go/parser` tests the underlying Groovy parser.
+
+## Install from Test PyPi
+
+```
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ reftrace
+```
