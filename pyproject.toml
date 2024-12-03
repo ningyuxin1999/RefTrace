@@ -17,6 +17,9 @@ dependencies = [
     "protobuf>=5.28.3"
 ]
 
+[tool.setuptools_scm]
+write_to = "python/reftrace/_version.py"
+
 [project.scripts]
 reftrace = "reftrace.cli.main:cli"
 
