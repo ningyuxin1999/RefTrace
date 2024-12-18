@@ -1033,6 +1033,57 @@ func TestVCFGenotypeAnnotator(t *testing.T) {
 	}
 }
 
+func TestMarkerAnnotation(t *testing.T) {
+	src := `@Override 
+void someMethod() {
+    println "Hello"
+}`
+
+	// Write the source to a temporary file
+	tmpFile, err := os.CreateTemp("", "marker_annotation*.groovy")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(src); err != nil {
+		t.Fatalf("Failed to write to temp file: %v", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		t.Fatalf("Failed to close temp file: %v", err)
+	}
+
+	result, err := BuildCST(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("Failed to build CST: %v", err)
+	}
+	if result.Mode != "SLL" {
+		t.Fatalf("Expected parsing mode to be SLL, but got %s", result.Mode)
+	}
+	builder := NewASTBuilder(tmpFile.Name())
+	ast := builder.Visit(result.Tree).(*ModuleNode)
+
+	methods := ast.Methods
+	if len(methods) != 1 {
+		t.Errorf("Expected exactly 1 method in the block, but got %d", len(methods))
+	}
+
+	method := methods[0]
+	annotations := method.GetAnnotations()
+	if len(annotations) != 1 {
+		t.Errorf("Expected exactly 1 annotation, but got %d", len(annotations))
+	}
+
+	ann := annotations[0]
+	if ann.GetClassNode().GetName() != "Override" {
+		t.Errorf("Expected annotation name to be 'Override', but got '%s'", ann.GetClassNode().GetName())
+	}
+
+	if len(ann.GetMembers()) != 0 {
+		t.Errorf("Expected marker annotation to have no members, but got %d", len(ann.GetMembers()))
+	}
+}
+
 func TestQiime2Intree(t *testing.T) {
 	filePath := filepath.Join(getTestDataDir(), "qiime2_intree.nf")
 
