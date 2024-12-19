@@ -52,8 +52,8 @@ func CorrectToGenericsSpec(genericsSpec map[string]IClassNode, typ *GenericsType
 		}
 	} else if typ.IsWildcard() {
 		upperBounds := typ.GetUpperBounds()
-		if len(upperBounds) > 0 {
-			cn = upperBounds[0] // GROOVY-9891
+		if upperBounds != nil && len(*upperBounds) > 0 {
+			cn = (*upperBounds)[0] // GROOVY-9891
 		}
 	}
 
@@ -138,8 +138,8 @@ func CorrectToGenericsSpecRecurseWithExclusions(genericsSpec map[string]IClassNo
 				oldUpper := oldgType.GetUpperBounds()
 				var upper []IClassNode
 				if oldUpper != nil {
-					upper = make([]IClassNode, len(oldUpper))
-					for j, u := range oldUpper {
+					upper = make([]IClassNode, len(*oldUpper))
+					for j, u := range *oldUpper {
 						upper[j] = CorrectToGenericsSpecRecurseWithExclusions(genericsSpec, u, exclusions)
 					}
 				}
@@ -148,7 +148,7 @@ func CorrectToGenericsSpecRecurseWithExclusions(genericsSpec map[string]IClassNo
 				if oldLower != nil {
 					lower = CorrectToGenericsSpecRecurseWithExclusions(genericsSpec, oldLower, exclusions)
 				}
-				fixed := NewGenericsType(oldgType.GetType(), upper, lower)
+				fixed := NewGenericsType(oldgType.GetType(), &upper, lower)
 				fixed.SetWildcard(true)
 				newgTypes[i] = fixed
 			} else if oldgType.IsPlaceholder() {
@@ -178,7 +178,7 @@ func Erasure(gt *GenericsType) *GenericsType {
 	}
 
 	if gt.GetUpperBounds() != nil {
-		cn = gt.GetUpperBounds()[0] // TODO: if length > 1 then union type?
+		cn = (*gt.GetUpperBounds())[0] // TODO: if length > 1 then union type?
 	}
 
 	return cn.AsGenericsType()
@@ -214,7 +214,7 @@ func HasUnresolvedGenerics(type_ IClassNode) bool {
 					return true
 				}
 			} else if upperBounds != nil {
-				for _, upperBound := range upperBounds {
+				for _, upperBound := range *upperBounds {
 					if HasUnresolvedGenerics(upperBound) {
 						return true
 					}
@@ -294,7 +294,7 @@ func ExtractPlaceholdersHelper(type_ IClassNode, placeholders map[*GenericsTypeN
 			} else {
 				upperBounds := gt.GetUpperBounds()
 				if upperBounds != nil {
-					for _, upperBound := range upperBounds {
+					for _, upperBound := range *upperBounds {
 						ExtractPlaceholdersHelper(upperBound, placeholders)
 					}
 				}
@@ -308,7 +308,7 @@ func ExtractPlaceholdersHelper(type_ IClassNode, placeholders map[*GenericsTypeN
 // BuildWildcardType generates a wildcard generic type to be used for checks against
 // class nodes. See GenericsType.IsCompatibleWith(IClassNode).
 func BuildWildcardType(upperBounds ...IClassNode) *GenericsType {
-	gt := NewGenericsType(MakeWithoutCaching("?"), upperBounds, nil)
+	gt := NewGenericsType(MakeWithoutCaching("?"), &upperBounds, nil)
 	gt.SetWildcard(true)
 	return gt
 }

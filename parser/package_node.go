@@ -2,14 +2,15 @@ package parser
 
 // PackageNode represents a package in the AST.
 type PackageNode struct {
-	AnnotatedNode
+	*AnnotatedNode
 	name string
 }
 
 // NewPackageNode creates a new PackageNode with the given name.
 func NewPackageNode(name string) *PackageNode {
 	return &PackageNode{
-		name: name,
+		name:          name,
+		AnnotatedNode: NewAnnotatedNode(),
 	}
 }
 

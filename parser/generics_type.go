@@ -10,7 +10,7 @@ type GenericsType struct {
 	name        string
 	typ         IClassNode
 	lowerBound  IClassNode
-	upperBounds []IClassNode
+	upperBounds *[]IClassNode
 	placeholder bool
 	resolved    bool
 	wildcard    bool
@@ -18,7 +18,7 @@ type GenericsType struct {
 
 var EmptyGenericsTypeArray = []*GenericsType{}
 
-func NewGenericsType(typ IClassNode, upperBounds []IClassNode, lowerBound IClassNode) *GenericsType {
+func NewGenericsType(typ IClassNode, upperBounds *[]IClassNode, lowerBound IClassNode) *GenericsType {
 	gt := &GenericsType{
 		BaseASTNode: NewBaseASTNode(),
 		typ:         typ,
@@ -56,7 +56,11 @@ func (gt *GenericsType) toString(visited map[string]bool) string {
 	wildcard := gt.IsWildcard()
 	placeholder := gt.IsPlaceholder()
 	lowerBound := gt.GetLowerBound()
-	upperBounds := gt.GetUpperBounds()
+	upperBoundsPtr := gt.GetUpperBounds()
+	upperBounds := []IClassNode{}
+	if upperBoundsPtr != nil {
+		upperBounds = *upperBoundsPtr
+	}
 
 	if placeholder {
 		visited[name] = true
@@ -72,7 +76,7 @@ func (gt *GenericsType) toString(visited map[string]bool) string {
 	if lowerBound != nil {
 		ret.WriteString(" super ")
 		ret.WriteString(genericsBounds(lowerBound, visited))
-	} else if upperBounds != nil &&
+	} else if upperBoundsPtr != nil &&
 		!(placeholder && len(upperBounds) == 1 && !upperBounds[0].IsGenericsPlaceHolder() && upperBounds[0].GetName() == "java.lang.Object") {
 		ret.WriteString(" extends ")
 		for i, ub := range upperBounds {
@@ -90,7 +94,11 @@ func genericsBounds(theType IClassNode, visited map[string]bool) string {
 	var gen interface{} = theType.AsGenericsType()
 	if _, ok := gen.(*LowestUpperBoundClassNode); ok {
 		var ret strings.Builder
-		for i, t := range theType.AsGenericsType().GetUpperBounds() {
+		upperBounds := []IClassNode{}
+		if upperBoundsPtr := theType.AsGenericsType().GetUpperBounds(); upperBoundsPtr != nil {
+			upperBounds = *upperBoundsPtr
+		}
+		for i, t := range upperBounds {
 			if i != 0 {
 				ret.WriteString(" & ")
 			}
@@ -186,7 +194,7 @@ func (gt *GenericsType) GetLowerBound() IClassNode {
 	return gt.lowerBound
 }
 
-func (gt *GenericsType) GetUpperBounds() []IClassNode {
+func (gt *GenericsType) GetUpperBounds() *[]IClassNode {
 	return gt.upperBounds
 }
 
@@ -211,7 +219,7 @@ func (gt *GenericsType) IsCompatibleWith(classNode IClassNode) bool {
 				return true
 			}
 		} else if gt.GetUpperBounds() != nil {
-			for _, upperBound := range gt.GetUpperBounds() {
+			for _, upperBound := range *gt.GetUpperBounds() {
 				if name == upperBound.GetUnresolvedName() {
 					return true
 				}
@@ -252,7 +260,7 @@ func (gt *GenericsType) checkGenerics(classNode IClassNode) bool {
 	}
 	upperBounds := gt.GetUpperBounds()
 	if upperBounds != nil {
-		for _, upperBound := range upperBounds {
+		for _, upperBound := range *upperBounds {
 			if !compareGenericsWithBound(classNode, upperBound) {
 				return false
 			}

@@ -145,7 +145,7 @@ func (lub *LowestUpperBoundClassNode) AsGenericsType() *GenericsType {
 	}
 	ubs = append(ubs, lub.interfaces...)
 
-	gt := NewGenericsType(MakeWithoutCaching("?"), ubs, nil)
+	gt := NewGenericsType(MakeWithoutCaching("?"), &ubs, nil)
 	gt.SetWildcard(true)
 	return gt
 }

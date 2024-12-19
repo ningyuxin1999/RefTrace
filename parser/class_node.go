@@ -603,6 +603,19 @@ func (cn *ClassNode) Equals(other IClassNode) bool {
 	if cn == other {
 		return true
 	}
+	/*
+		careful! interfaces can be null in two ways:
+		1. the interface itself is null
+		2. the interface holds a nil pointer
+		this happens because interfaces in Go consist of both a type descriptor (concrete type)
+		and a value (pointer to the data)
+		var node *ClassNode = nil
+		var iface IClassNode = node
+		iface is not nil because it has a type descriptor
+	*/
+	if other == nil || other == (*ClassNode)(nil) {
+		return false
+	}
 	if cn.redirect != nil {
 		return cn.redirect.Equals(other)
 	}
@@ -887,7 +900,7 @@ func (cn *ClassNode) AsGenericsType() *GenericsType {
 		if cn.redirect != nil {
 			upper = cn.redirect
 		}
-		return NewGenericsType(cn, []IClassNode{upper}, nil)
+		return NewGenericsType(cn, &[]IClassNode{upper}, nil)
 	}
 }
 

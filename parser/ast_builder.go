@@ -1810,7 +1810,15 @@ func (v *ASTBuilder) VisitTypeParameters(ctx *TypeParametersContext) interface{}
 func (v *ASTBuilder) VisitTypeParameter(ctx *TypeParameterContext) interface{} {
 	baseType := configureAST(MakeWithoutCaching(v.VisitClassName(ctx.ClassName().(*ClassNameContext)).(string)), ctx)
 	baseType.AddTypeAnnotations(v.VisitAnnotationsOpt(ctx.AnnotationsOpt().(*AnnotationsOptContext)).([]*AnnotationNode))
-	genericsType := NewGenericsType(baseType, v.VisitTypeBound(ctx.TypeBound().(*TypeBoundContext)).([]IClassNode), nil)
+	var context *TypeBoundContext
+	if ctx.TypeBound() != nil {
+		context = ctx.TypeBound().(*TypeBoundContext)
+	}
+	var bounds []IClassNode
+	if res := v.VisitTypeBound(context); res != nil {
+		bounds = res.([]IClassNode)
+	}
+	genericsType := NewGenericsType(baseType, &bounds, nil)
 	return configureAST(genericsType, ctx)
 }
 
@@ -1950,7 +1958,14 @@ func (v *ASTBuilder) VisitMethodDeclaration(ctx *MethodDeclarationContext) inter
 	exceptions := v.VisitQualifiedClassNameList(qualifiedClassNameListCtxPtr).([]IClassNode)
 
 	v.pushAnonymousInnerClass(list.New())
-	code := v.VisitMethodBody(ctx.MethodBody().(*MethodBodyContext)).(Statement)
+	var context *MethodBodyContext
+	if ctx.MethodBody() != nil {
+		context = ctx.MethodBody().(*MethodBodyContext)
+	}
+	var code Statement
+	if v.VisitMethodBody(context) != nil {
+		code = v.VisitMethodBody(context).(Statement)
+	}
 	anonymousInnerClassList := v.popAnonymousInnerClass()
 
 	var methodNode MethodOrConstructorNode
@@ -2541,7 +2556,11 @@ func (v *ASTBuilder) VisitArrayInitializer(ctx *ArrayInitializerContext) interfa
 		v.visitingArrayInitializerCount--
 	}()
 
-	return v.VisitVariableInitializers(ctx.VariableInitializers().(*VariableInitializersContext))
+	var context *VariableInitializersContext
+	if ctx.VariableInitializers() != nil {
+		context = ctx.VariableInitializers().(*VariableInitializersContext)
+	}
+	return v.VisitVariableInitializers(context)
 }
 
 func (v *ASTBuilder) VisitBlock(ctx *BlockContext) interface{} {
@@ -3864,8 +3883,12 @@ func (v *ASTBuilder) VisitCreator(ctx *CreatorContext) interface{} {
 }
 
 func (v *ASTBuilder) VisitDim(ctx *DimContext) interface{} {
+	var expression Expression
+	if ctx.Expression() != nil {
+		expression = v.Visit(ctx.Expression()).(Expression)
+	}
 	return NewTuple3(
-		v.Visit(ctx.Expression()).(Expression),
+		expression,
 		v.VisitAnnotationsOpt(ctx.AnnotationsOpt().(*AnnotationsOptContext)).([]*AnnotationNode),
 		ctx.LBRACK(),
 	)
@@ -4740,7 +4763,7 @@ func (v *ASTBuilder) VisitTypeArgument(ctx *TypeArgumentContext) interface{} {
 			lowerBound = classNode
 		}
 
-		genericsType := NewGenericsType(baseType, upperBounds, lowerBound)
+		genericsType := NewGenericsType(baseType, &upperBounds, lowerBound)
 		genericsType.SetWildcard(true)
 
 		return configureAST(genericsType, ctx)
@@ -4840,7 +4863,11 @@ func (v *ASTBuilder) VisitAnnotationsOpt(ctx *AnnotationsOptContext) interface{}
 func (v *ASTBuilder) VisitAnnotation(ctx *AnnotationContext) interface{} {
 	annotationName := v.VisitAnnotationName(ctx.AnnotationName().(*AnnotationNameContext)).(string)
 	annotationNode := NewAnnotationNode(MakeFromString(annotationName))
-	annotationElementValues := v.VisitElementValues(ctx.ElementValues().(*ElementValuesContext)).([]Tuple2[string, Expression])
+	var context *ElementValuesContext
+	if ctx.ElementValues() != nil {
+		context = ctx.ElementValues().(*ElementValuesContext)
+	}
+	annotationElementValues := v.VisitElementValues(context).([]Tuple2[string, Expression])
 
 	for _, e := range annotationElementValues {
 		annotationNode.AddMember(e.V1, e.V2)

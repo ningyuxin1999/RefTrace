@@ -46,7 +46,8 @@ func configureASTWithToken[T ASTNodeNoVisit](astNode T, token antlr.Token) T {
 
 // configureASTWithTokens sets the position information for any ASTNode using start and stop tokens
 func configureASTWithTokens[T ASTNodeNoVisit](astNode T, start, stop antlr.Token) T {
-	astNode.SetLineNumber(start.GetLine())
+	startLine := start.GetLine()
+	astNode.SetLineNumber(startLine)
 	astNode.SetColumnNumber(start.GetColumn() + 1)
 
 	astNode.SetLastLineNumber(stop.GetLine())
