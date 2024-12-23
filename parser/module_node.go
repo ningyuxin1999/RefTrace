@@ -88,7 +88,8 @@ func (m *ModuleNode) createStatementsClass() IClassNode {
 			}
 		} else {
 			ve := de.GetVariableExpression()
-			fields = append(fields, NewFieldNode(ve.GetName(), ve.GetModifiers(), ve.GetType(), nil, de.GetRightExpression()))
+			rightExpr := de.GetRightExpression()
+			fields = append(fields, NewFieldNode(ve.GetName(), ve.GetModifiers(), ve.GetType(), nil, rightExpr))
 		}
 	}
 

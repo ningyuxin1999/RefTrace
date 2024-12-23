@@ -1575,8 +1575,9 @@ func (v *ASTBuilder) transformRecordHeaderToProperties(ctx *ClassDeclarationCont
 	for i, parameter := range parameters {
 		parameterCtx := parameter.GetNodeMetaData(PARAMETER_CONTEXT).(*FormalParameterContext)
 		parameterModifierManager := parameter.GetNodeMetaData(PARAMETER_MODIFIER_MANAGER).(*ModifierManager)
+		initialValue := parameter.GetInitialExpression()
 		propertyNode := v.declareProperty(parameterCtx.GroovyParserRuleContext, parameterModifierManager, parameter.GetType(), classNode, i,
-			parameter, parameter.GetName(), parameter.GetModifiers()|ACC_FINAL, parameter.GetInitialExpression())
+			parameter, parameter.GetName(), parameter.GetModifiers()|ACC_FINAL, initialValue)
 		propertyNode.GetField().PutNodeMetaData(IS_RECORD_GENERATED, true)
 	}
 }
@@ -2296,7 +2297,8 @@ func (v *ASTBuilder) createFieldDeclarationListStatement(ctx *VariableDeclaratio
 
 		var initialValue Expression
 		if _, ok := declarationExpression.GetRightExpression().(*EmptyExpression); !ok {
-			initialValue = declarationExpression.GetRightExpression()
+			expr := declarationExpression.GetRightExpression()
+			initialValue = expr
 		}
 		defaultValue := v.findDefaultValueByType(variableType)
 
@@ -2305,7 +2307,8 @@ func (v *ASTBuilder) createFieldDeclarationListStatement(ctx *VariableDeclaratio
 				if defaultValue == nil {
 					initialValue = nil
 				} else {
-					initialValue = NewConstantExpression(defaultValue)
+					expr := Expression(NewConstantExpression(defaultValue))
+					initialValue = expr
 				}
 			}
 
@@ -2506,6 +2509,7 @@ func (v *ASTBuilder) VisitVariableDeclarator(ctx *VariableDeclaratorContext) int
 	}
 
 	ve := v.VisitVariableDeclaratorId(ctx.VariableDeclaratorId().(*VariableDeclaratorIdContext)).(*VariableExpression)
+	vi := v.VisitVariableInitializer(variableInitializerCtx).(Expression)
 
 	return configureAST(
 		NewDeclarationExpression(
@@ -2517,7 +2521,7 @@ func (v *ASTBuilder) VisitVariableDeclarator(ctx *VariableDeclaratorContext) int
 				ctx.VariableDeclaratorId(),
 			),
 			token,
-			v.VisitVariableInitializer(variableInitializerCtx).(Expression),
+			vi,
 		),
 		ctx,
 	)

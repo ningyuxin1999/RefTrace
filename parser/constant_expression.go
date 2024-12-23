@@ -24,7 +24,7 @@ var (
 	PRIM_TRUE        = NewConstantExpressionPrimitive(true)
 	PRIM_FALSE       = NewConstantExpressionPrimitive(false)
 	VOID             = NewConstantExpression(reflect.TypeOf((*interface{})(nil)).Elem())
-	EMPTY_EXPRESSION = NewConstantExpression(nil)
+	EMPTY_EXPRESSION = NewEmptyExpression()
 )
 
 // NewConstantExpression creates a new ConstantExpression
