@@ -246,7 +246,7 @@ func (v *ASTBuilder) popAnonymousInnerClass() *list.List {
 // peekAnonymousInnerClass returns the top list of InnerClassNode from the stack without removing it
 func (v *ASTBuilder) peekAnonymousInnerClass() *list.List {
 	if v.anonymousInnerClassesDefinedInMethodStack.Len() == 0 {
-		panic("peek empty anonymous inner class stack")
+		return nil
 	}
 	return v.anonymousInnerClassesDefinedInMethodStack.Front().Value.(*list.List)
 }
@@ -1654,10 +1654,15 @@ func (v *ASTBuilder) VisitEnumConstant(ctx *EnumConstantContext) interface{} {
 		anonymousInnerClassNode = v.VisitAnonymousInnerClassDeclaration(ctx.AnonymousInnerClassDeclaration().(*AnonymousInnerClassDeclarationContext)).(*InnerClassNode)
 	}
 
+	var argsContext *ArgumentsContext
+	if ctx.Arguments() != nil {
+		argsContext = ctx.Arguments().(*ArgumentsContext)
+	}
+
 	enumConstant := AddEnumConstant(
 		classNode,
 		v.VisitIdentifier(ctx.Identifier().(*IdentifierContext)).(string),
-		v.createEnumConstantInitExpression(ctx.Arguments().(*ArgumentsContext), anonymousInnerClassNode),
+		v.createEnumConstantInitExpression(argsContext, anonymousInnerClassNode),
 	)
 
 	enumConstant.AddAnnotations(v.VisitAnnotationsOpt(ctx.AnnotationsOpt().(*AnnotationsOptContext)).([]*AnnotationNode))
@@ -1672,7 +1677,7 @@ func (v *ASTBuilder) createEnumConstantInitExpression(ctx *ArgumentsContext, ano
 		return nil
 	}
 
-	argumentListExpression := v.VisitArguments(ctx).(*TupleExpression)
+	argumentListExpression := v.VisitArguments(ctx).(ITupleExpression)
 	expressions := argumentListExpression.GetExpressions()
 
 	if len(expressions) == 1 {
@@ -2656,7 +2661,7 @@ func (v *ASTBuilder) VisitCommandExpression(ctx *CommandExpressionContext) inter
 	for _, cmdArgCtx := range ctx.AllCommandArgument() {
 		commandArgumentContext := cmdArgCtx.(*CommandArgumentContext)
 		commandArgumentContext.PutNodeMetaData(CMD_EXPRESSION_BASE_EXPR, result)
-		result = v.VisitCommandArgument(commandArgumentContext).(*MethodCallExpression)
+		result = v.VisitCommandArgument(commandArgumentContext).(Expression)
 	}
 
 	return configureAST(result, ctx)
