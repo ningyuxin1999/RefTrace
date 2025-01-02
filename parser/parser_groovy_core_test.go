@@ -1,10 +1,7 @@
 package parser
 
 import (
-	"os"
 	"path/filepath"
-	"runtime/debug"
-	"strings"
 	"testing"
 )
 
@@ -77,10 +74,16 @@ func TestCommand03x(t *testing.T) {
 }
 
 func TestGstring02(t *testing.T) {
-	filePath := filepath.Join("testdata", "groovy_core", "Gstring_02.groovy")
+	filePath := filepath.Join("testdata", "groovy_core", "Gstring_02x.groovy")
 	testGroovyFile(t, filePath)
 }
 
+func TestInterfaceDeclaration02(t *testing.T) {
+	filePath := filepath.Join("testdata", "groovy_core", "InterfaceDeclaration_02.groovy")
+	testGroovyFile(t, filePath)
+}
+
+/*
 func TestParseAllTestdataFiles(t *testing.T) {
 	// Get testdata directory
 	testDir := "testdata"
@@ -142,3 +145,4 @@ func TestParseAllTestdataFiles(t *testing.T) {
 
 	t.Logf("Test Summary: Total: %d, Passed: %d, Failed: %d, Panicked: %d", totalTests, passedTests, failedTests, panickedTests)
 }
+*/

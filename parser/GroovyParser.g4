@@ -278,8 +278,8 @@ methodDeclaration[int t, int ct]
             DEFAULT nls elementValue
         |
             (nls THROWS nls qualifiedClassNameList)?
-            (nls methodBody)
-        )?
+            (nls methodBody)?
+        )
     ;
 
 compactConstructorDeclaration

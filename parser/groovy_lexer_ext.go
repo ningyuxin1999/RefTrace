@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"unicode"
 	"unicode/utf16"
@@ -305,42 +306,16 @@ func (l *GroovyLexer) isRegexAllowed() bool {
 	return !searchArray(REGEX_CHECK_ARRAY, l.lastTokenType)
 }
 
-// matches is a helper function to check if a string matches a given pattern.
-func matches(str string, pattern *unicode.RangeTable) bool {
-	for _, r := range str {
-		if unicode.Is(pattern, r) {
-			return true
-		}
-	}
-	return false
+// matches is a helper function to check if a string matches a given pattern
+func matches(str string, pattern *regexp.Regexp) bool {
+	return pattern.MatchString(str)
 }
 
-// Define the patterns used in the function
 var (
-	LETTER_AND_LEFTCURLY_PATTERN = &unicode.RangeTable{
-		R16: []unicode.Range16{
-			{Lo: 'a', Hi: 'z', Stride: 1},
-			{Lo: 'A', Hi: 'Z', Stride: 1},
-			{Lo: '_', Hi: '_', Stride: 1},
-			{Lo: '{', Hi: '{', Stride: 1},
-		},
-	}
-	NONSURROGATE_PATTERN = &unicode.RangeTable{
-		R16: []unicode.Range16{
-			{Lo: 0x0000, Hi: 0x007F, Stride: 1},
-			{Lo: 0xE000, Hi: 0xFFFF, Stride: 1},
-		},
-	}
-	SURROGATE_PAIR1_PATTERN = &unicode.RangeTable{
-		R16: []unicode.Range16{
-			{Lo: 0xD800, Hi: 0xDBFF, Stride: 1},
-		},
-	}
-	SURROGATE_PAIR2_PATTERN = &unicode.RangeTable{
-		R16: []unicode.Range16{
-			{Lo: 0xDC00, Hi: 0xDFFF, Stride: 1},
-		},
-	}
+	LETTER_AND_LEFTCURLY_PATTERN = regexp.MustCompile(`[a-zA-Z_{]`)
+	NONSURROGATE_PATTERN         = regexp.MustCompile(`[^\x{0000}-\x{007F}\x{D800}-\x{DBFF}]`)
+	SURROGATE_PAIR1_PATTERN      = regexp.MustCompile(`[\x{D800}-\x{DBFF}]`)
+	SURROGATE_PAIR2_PATTERN      = regexp.MustCompile(`[\x{DC00}-\x{DFFF}]`)
 )
 
 // isFollowedByJavaLetterInGString checks if the character following the current position in the CharStream is a valid Java identifier part.
