@@ -196,6 +196,7 @@ type ASTBuilder struct {
 	switchExpressionVariableSeq               int
 	classNodeStack                            *list.List
 	anonymousInnerClassesDefinedInMethodStack *list.List
+	resourceCount                             int
 }
 
 // NewASTBuilder creates and initializes a new ASTBuilder instance
@@ -208,6 +209,7 @@ func NewASTBuilder(sourceUnitName string) *ASTBuilder {
 		switchExpressionRuleContextStack: list.New(),
 		classNodeStack:                   list.New(),
 		anonymousInnerClassesDefinedInMethodStack: list.New(),
+		resourceCount: 0,
 	}
 	builder.BaseGroovyParserVisitor.VisitChildren = builder.VisitChildren
 	return builder
@@ -683,7 +685,12 @@ func (v *ASTBuilder) createLoopConditionExpressionAndBlock(eipc *ExpressionInPar
 		conditionExpression,
 	)
 
-	loopBlock := v.unpackStatement(v.Visit(sc).(Statement))
+	var stmt Statement
+	if res := v.Visit(sc); res != nil {
+		stmt = res.(Statement)
+	}
+
+	loopBlock := v.unpackStatement(stmt)
 
 	return NewTuple2(booleanExpression, loopBlock)
 }
@@ -784,8 +791,11 @@ func (v *ASTBuilder) VisitResource(ctx *ResourceContext) interface{} {
 		if isVariableDeclaration {
 			assignmentExpression = expression.(*BinaryExpression)
 		} else if isVariableAccess {
-			// TODO: transform
-			assignmentExpression = expression.(*BinaryExpression)
+			currResourceCount := v.resourceCount
+			v.resourceCount++
+			nextResourceName := fmt.Sprintf("__$$resource%d", currResourceCount)
+			varExpr := NewVariableExpressionWithString(nextResourceName)
+			assignmentExpression = NewBinaryExpression(varExpr, NewToken(ASSIGN, "=", -1, -1), expression)
 		} else {
 			panic(createParsingFailedException("Unsupported resource declaration", parserRuleContextAdapter{ctx}))
 		}
