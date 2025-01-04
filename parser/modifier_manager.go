@@ -6,24 +6,14 @@ import (
 	"slices"
 )
 
-const (
-	ABSTRACT = iota
-	FINAL
-	NATIVE
-	STATIC
-	VOLATILE
-	SEALED
-	NON_SEALED
-)
-
 type ModifierManager struct {
 	astBuilder       *ASTBuilder
 	modifierNodeList []*ModifierNode
 }
 
 var INVALID_MODIFIERS_MAP = map[reflect.Type][]int{
-	reflect.TypeOf(&ConstructorNode{}): {STATIC, FINAL, ABSTRACT, NATIVE},
-	reflect.TypeOf(&MethodNode{}):      {VOLATILE},
+	reflect.TypeOf(&ConstructorNode{}): {GroovyParserSTATIC, GroovyParserFINAL, GroovyParserABSTRACT, GroovyParserNATIVE},
+	reflect.TypeOf(&MethodNode{}):      {GroovyParserVOLATILE},
 }
 
 func NewModifierManager(astBuilder *ASTBuilder, modifierNodeList []*ModifierNode) *ModifierManager {

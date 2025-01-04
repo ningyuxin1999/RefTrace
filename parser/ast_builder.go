@@ -1354,9 +1354,9 @@ func (v *ASTBuilder) VisitClassDeclaration(ctx *ClassDeclarationContext) interfa
 
 	modifierManager := NewModifierManager(v, ctx.GetNodeMetaData(TYPE_DECLARATION_MODIFIERS).([]*ModifierNode))
 
-	finalModifier := modifierManager.Get(FINAL)
-	sealedModifier := modifierManager.Get(SEALED)
-	nonSealedModifier := modifierManager.Get(NON_SEALED)
+	finalModifier := modifierManager.Get(GroovyParserFINAL)
+	sealedModifier := modifierManager.Get(GroovyParserSEALED)
+	nonSealedModifier := modifierManager.Get(GroovyParserNON_SEALED)
 	isFinal := finalModifier != nil
 	isSealed := sealedModifier != nil
 	isNonSealed := nonSealedModifier != nil
@@ -2017,7 +2017,7 @@ func (v *ASTBuilder) VisitMethodDeclaration(ctx *MethodDeclarationContext) inter
 			ctx.ReturnType() != nil,
 			modifierManager))
 
-	if modifierManager.ContainsAny(STATIC) {
+	if modifierManager.ContainsAny(GroovyParserSTATIC) {
 		for _, parameter := range methodNode.GetParameters() {
 			parameter.SetInStaticContext(true)
 		}
@@ -2168,7 +2168,7 @@ func (v *ASTBuilder) createMethodNodeForClass(ctx *MethodDeclarationContext, mod
 		code = configureAST(exprStmt, ctx)
 	}
 
-	if !modifierManager.ContainsAny(STATIC) && classNode.IsInterface() && !(isTrue(classNode, IS_INTERFACE_WITH_DEFAULT_METHODS) && modifierManager.ContainsAny(GroovyParserDEFAULT, GroovyParserPRIVATE)) {
+	if !modifierManager.ContainsAny(GroovyParserSTATIC) && classNode.IsInterface() && !(isTrue(classNode, IS_INTERFACE_WITH_DEFAULT_METHODS) && modifierManager.ContainsAny(GroovyParserDEFAULT, GroovyParserPRIVATE)) {
 		modifiers |= ACC_ABSTRACT
 	}
 	methodNode := NewMethodNode(methodName, modifiers, returnType, parameters, exceptions, code)
