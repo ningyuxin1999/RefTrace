@@ -8,7 +8,6 @@ import (
 
 type FieldNode struct {
 	*AnnotatedNode
-	Variable
 	name                   string
 	modifiers              int
 	fieldType              IClassNode
@@ -17,6 +16,40 @@ type FieldNode struct {
 	dynamicTyped           bool
 	holder                 bool
 	originType             IClassNode
+}
+
+var _ Variable = &FieldNode{}
+
+func (f *FieldNode) IsClosureSharedVariable() bool {
+	return false
+}
+
+func (f *FieldNode) SetClosureSharedVariable(bool) {
+	// No-op implementation as per Java default
+}
+
+func (f *FieldNode) IsFinal() bool {
+	return (f.GetModifiers() & ACC_FINAL) != 0
+}
+
+func (f *FieldNode) IsPrivate() bool {
+	return (f.GetModifiers() & ACC_PRIVATE) != 0
+}
+
+func (f *FieldNode) IsProtected() bool {
+	return (f.GetModifiers() & ACC_PROTECTED) != 0
+}
+
+func (f *FieldNode) IsPublic() bool {
+	return (f.GetModifiers() & ACC_PUBLIC) != 0
+}
+
+func (f *FieldNode) IsStatic() bool {
+	return (f.GetModifiers() & ACC_STATIC) != 0
+}
+
+func (f *FieldNode) IsVolatile() bool {
+	return (f.GetModifiers() & ACC_VOLATILE) != 0
 }
 
 func NewStatic(theClass reflect.Type, name string) (*FieldNode, error) {

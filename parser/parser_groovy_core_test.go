@@ -106,6 +106,11 @@ func TestSafeIndex04x(t *testing.T) {
 	testGroovyFile(t, filePath)
 }
 
+func TestRecordDeclaration07x(t *testing.T) {
+	filePath := filepath.Join("testdata", "groovy_core", "RecordDeclaration_07x.groovy")
+	testGroovyFile(t, filePath)
+}
+
 func TestParseAllTestdataFiles(t *testing.T) {
 	// Get testdata directory
 	testDir := "testdata"
