@@ -3382,9 +3382,20 @@ func (v *ASTBuilder) VisitIndexPropertyArgs(ctx *IndexPropertyArgsContext) inter
 }
 
 func (v *ASTBuilder) VisitNamedPropertyArgs(ctx *NamedPropertyArgsContext) interface{} {
-	// TODO: implement this
-	panic("FOO")
-	//return v.VisitMapEntryList(ctx.MapEntryList().(*MapEntryListContext))
+	if ctx.NamedPropertyArgList() != nil {
+		return v.VisitNamedPropertyArgList(ctx.NamedPropertyArgList().(*NamedPropertyArgListContext))
+	}
+	// Handle the COLON case (empty map)
+	return []MapEntryExpression{}
+}
+
+func (v *ASTBuilder) VisitNamedPropertyArgList(ctx *NamedPropertyArgListContext) interface{} {
+	mapEntryList := make([]MapEntryExpression, 0)
+	for _, arg := range ctx.AllNamedPropertyArg() {
+		// Dereference the pointer before adding to slice
+		mapEntryList = append(mapEntryList, *v.VisitNamedPropertyArg(arg.(*NamedPropertyArgContext)).(*MapEntryExpression))
+	}
+	return mapEntryList
 }
 
 func (v *ASTBuilder) VisitNamePart(ctx *NamePartContext) interface{} {

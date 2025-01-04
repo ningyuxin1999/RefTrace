@@ -101,6 +101,11 @@ func TestSealedTypeDeclaration01x(t *testing.T) {
 	testGroovyFile(t, filePath)
 }
 
+func TestSafeIndex04x(t *testing.T) {
+	filePath := filepath.Join("testdata", "groovy_core", "SafeIndex_04x.groovy")
+	testGroovyFile(t, filePath)
+}
+
 func TestParseAllTestdataFiles(t *testing.T) {
 	// Get testdata directory
 	testDir := "testdata"
