@@ -126,6 +126,11 @@ func TestMethodReference01x(t *testing.T) {
 	testGroovyFile(t, filePath)
 }
 
+func TestMap01(t *testing.T) {
+	filePath := filepath.Join("testdata", "groovy_core", "Map_01.groovy")
+	testGroovyFile(t, filePath)
+}
+
 func TestParseAllTestdataFiles(t *testing.T) {
 	// Get testdata directory
 	testDir := "testdata"
