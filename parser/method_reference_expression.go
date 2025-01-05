@@ -12,10 +12,7 @@ type MethodReferenceExpression struct {
 
 func NewMethodReferenceExpression(expression, methodName Expression) *MethodReferenceExpression {
 	return &MethodReferenceExpression{
-		MethodPointerExpression: &MethodPointerExpression{
-			expression: expression,
-			methodName: methodName,
-		},
+		MethodPointerExpression: NewMethodPointerExpression(expression, methodName),
 	}
 }
 

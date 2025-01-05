@@ -4,7 +4,7 @@ import "fmt"
 
 //var _ Expression = (*BaseExpression)(nil)
 
-//var _ ASTNode = (*BaseExpression)(nil)
+var _ ASTNodeNoVisit = (*BaseExpression)(nil)
 
 // Expression is the base interface for any expression
 type Expression interface {
