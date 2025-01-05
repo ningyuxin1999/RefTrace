@@ -12,21 +12,13 @@ type AttributeExpression struct {
 
 func NewAttributeExpression(objectExpression, property Expression) *AttributeExpression {
 	return &AttributeExpression{
-		PropertyExpression{
-			objectExpression: objectExpression,
-			property:         property,
-			safe:             false,
-		},
+		PropertyExpression: *NewPropertyExpressionWithSafe(objectExpression, property, false),
 	}
 }
 
 func NewAttributeExpressionWithSafe(objectExpression, property Expression, safe bool) *AttributeExpression {
 	return &AttributeExpression{
-		PropertyExpression{
-			objectExpression: objectExpression,
-			property:         property,
-			safe:             safe,
-		},
+		PropertyExpression: *NewPropertyExpressionWithSafe(objectExpression, property, safe),
 	}
 }
 

@@ -141,6 +141,11 @@ func TestFor03(t *testing.T) {
 	testGroovyFile(t, filePath)
 }
 
+func TestExpression15(t *testing.T) {
+	filePath := filepath.Join("testdata", "groovy_core", "Expression_15.groovy")
+	testGroovyFile(t, filePath)
+}
+
 func TestParseAllTestdataFiles(t *testing.T) {
 	// Get testdata directory
 	testDir := "testdata"
