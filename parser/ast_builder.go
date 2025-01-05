@@ -552,7 +552,15 @@ func (v *ASTBuilder) VisitLoopStmtAlt(ctx *LoopStmtAltContext) interface{} {
 func (v *ASTBuilder) VisitForStmtAlt(ctx *ForStmtAltContext) interface{} {
 	controlTuple := v.VisitForControl(ctx.ForControl().(*ForControlContext)).(Tuple2[*Parameter, Expression])
 
-	loopBlock := v.unpackStatement(v.Visit(ctx.Statement()).(Statement))
+	var stmtCtx IStatementContext
+	if ctx.Statement() != nil {
+		stmtCtx = ctx.Statement().(IStatementContext)
+	}
+	var stmt Statement
+	if result := v.Visit(stmtCtx); result != nil {
+		stmt = result.(Statement)
+	}
+	loopBlock := v.unpackStatement(stmt)
 
 	var block Statement
 	if loopBlock != nil {
