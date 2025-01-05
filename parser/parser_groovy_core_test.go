@@ -116,6 +116,11 @@ func TestNumber01x(t *testing.T) {
 	testGroovyFile(t, filePath)
 }
 
+func TestNonStaticClass01x(t *testing.T) {
+	filePath := filepath.Join("testdata", "groovy_core", "NonStaticClass_01x.groovy")
+	testGroovyFile(t, filePath)
+}
+
 func TestParseAllTestdataFiles(t *testing.T) {
 	// Get testdata directory
 	testDir := "testdata"

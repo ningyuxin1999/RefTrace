@@ -2874,7 +2874,7 @@ func (v *ASTBuilder) VisitPathElement(ctx *PathElementContext) interface{} {
 		}
 	} else if ctx.Creator() != nil {
 		creatorContext := ctx.Creator().(*CreatorContext)
-		creatorContext.SetNodeMetaData(ENCLOSING_INSTANCE_EXPRESSION, baseExpr)
+		creatorContext.PutNodeMetaData(ENCLOSING_INSTANCE_EXPRESSION, baseExpr)
 		return configureAST(v.VisitCreator(creatorContext).(Expression), ctx)
 	} else if ctx.IndexPropertyArgs() != nil {
 		tuple := v.VisitIndexPropertyArgs(ctx.IndexPropertyArgs().(*IndexPropertyArgsContext)).(Tuple2[antlr.Token, Expression])
