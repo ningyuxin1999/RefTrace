@@ -84,6 +84,13 @@ type NumberFormatError struct {
 	Exception error
 }
 
+func NewNumberFormatError(ctx antlr.ParserRuleContext, err error) *NumberFormatError {
+	return &NumberFormatError{
+		Context:   ctx,
+		Exception: err,
+	}
+}
+
 // SyntaxException Define the SyntaxException struct
 type SyntaxException struct {
 	Message           string
@@ -3482,7 +3489,11 @@ func (v *ASTBuilder) VisitUnaryAddExprAlt(ctx *UnaryAddExprAltContext) interface
 			constantExpression := expression.(*ConstantExpression)
 			integerLiteralText := constantExpression.GetNodeMetaData(INTEGER_LITERAL_TEXT)
 			if integerLiteralText != nil {
-				result := NewConstantExpression(ParseInteger(SUB_STR + integerLiteralText.(string)))
+				parsed, err := ParseInteger(SUB_STR + integerLiteralText.(string))
+				if err != nil {
+					panic(createParsingFailedException(err.Error(), parserRuleContextAdapter{ctx}))
+				}
+				result := NewConstantExpression(parsed)
 				/*
 					if err != nil {
 						panic(createParsingFailedException(err.Error(), ctx))
@@ -3494,7 +3505,11 @@ func (v *ASTBuilder) VisitUnaryAddExprAlt(ctx *UnaryAddExprAltContext) interface
 
 			floatingPointLiteralText := constantExpression.GetNodeMetaData(FLOATING_POINT_LITERAL_TEXT)
 			if floatingPointLiteralText != nil {
-				result := NewConstantExpression(ParseDecimal(SUB_STR + floatingPointLiteralText.(string)))
+				parsed, err := ParseDecimal(SUB_STR + floatingPointLiteralText.(string))
+				if err != nil {
+					panic(createParsingFailedException(err.Error(), parserRuleContextAdapter{ctx}))
+				}
+				result := NewConstantExpression(parsed)
 				/*
 					if err != nil {
 						panic(createParsingFailedException(err.Error(), ctx))
@@ -4223,14 +4238,10 @@ func (v *ASTBuilder) validateExpressionListElement(ctx *ExpressionListElementCon
 func (v *ASTBuilder) VisitIntegerLiteralAlt(ctx *IntegerLiteralAltContext) interface{} {
 	text := ctx.IntegerLiteral().GetText()
 	var num interface{}
-	//var err error
-	num = ParseInteger(text)
-	// TODO: implement this
-	/*
-		if err != nil {
-			v.numberFormatError = NewTuple2(ctx, err)
-		}
-	*/
+	num, err := ParseInteger(text)
+	if err != nil {
+		v.numberFormatError = NewNumberFormatError(ctx, err)
+	}
 
 	constantExpression := NewConstantExpression(num)
 	constantExpression.PutNodeMetaData(INTEGER_LITERAL_TEXT, text)
@@ -4241,14 +4252,10 @@ func (v *ASTBuilder) VisitIntegerLiteralAlt(ctx *IntegerLiteralAltContext) inter
 func (v *ASTBuilder) VisitFloatingPointLiteralAlt(ctx *FloatingPointLiteralAltContext) interface{} {
 	text := ctx.FloatingPointLiteral().GetText()
 	var num interface{}
-	//var err error
-	num = ParseDecimal(text)
-	// TODO: implement this
-	/*
-		if err != nil {
-			v.numberFormatError = NewTuple2(ctx, err)
-		}
-	*/
+	num, err := ParseDecimal(text)
+	if err != nil {
+		v.numberFormatError = NewNumberFormatError(ctx, err)
+	}
 
 	constantExpression := NewConstantExpression(num)
 	constantExpression.PutNodeMetaData(FLOATING_POINT_LITERAL_TEXT, text)

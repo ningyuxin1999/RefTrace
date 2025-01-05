@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"math"
 	"math/big"
 	"strings"
@@ -40,7 +41,7 @@ func IsNumericTypeSpecifier(c rune, isDecimal bool) bool {
 }
 
 // ParseInteger builds a Number from the given integer descriptor.
-func ParseInteger(text string) interface{} {
+func ParseInteger(text string) (interface{}, error) {
 	text = strings.ReplaceAll(text, "_", "")
 
 	negative := false
@@ -78,29 +79,29 @@ func ParseInteger(text string) interface{} {
 	switch typeSpecifier {
 	case 'i':
 		if radix == 10 && (value.Cmp(big.NewInt(math.MaxInt64)) > 0 || value.Cmp(big.NewInt(math.MinInt64)) < 0) {
-			panic("Number out of int range")
+			return nil, errors.New("Number out of int range")
 		}
-		return int(value.Int64())
+		return int(value.Int64()), nil
 	case 'l':
 		if radix == 10 && (value.Cmp(big.NewInt(math.MaxInt64)) > 0 || value.Cmp(big.NewInt(math.MinInt64)) < 0) {
-			panic("Number out of int64 range")
+			return nil, errors.New("Number out of int64 range")
 		}
-		return value.Int64()
+		return value.Int64(), nil
 	case 'g':
-		return value
+		return value, nil
 	default:
 		if value.IsInt64() {
 			if value.Int64() >= math.MinInt32 && value.Int64() <= math.MaxInt32 {
-				return int(value.Int64())
+				return int(value.Int64()), nil
 			}
-			return value.Int64()
+			return value.Int64(), nil
 		}
-		return value
+		return value, nil
 	}
 }
 
 // ParseDecimal builds a Number from the given decimal descriptor.
-func ParseDecimal(text string) interface{} {
+func ParseDecimal(text string) (interface{}, error) {
 	text = strings.ReplaceAll(text, "_", "")
 
 	typeSpecifier := 'x'
@@ -115,15 +116,15 @@ func ParseDecimal(text string) interface{} {
 	case 'f':
 		f, _ := value.Float64()
 		if f >= -math.MaxFloat32 && f <= math.MaxFloat32 {
-			return float32(f)
+			return float32(f), nil
 		}
-		panic("Number out of float32 range")
+		return nil, errors.New("number out of float32 range")
 	case 'd':
 		f, _ := value.Float64()
-		return f
+		return f, nil
 	case 'g':
 		fallthrough
 	default:
-		return value
+		return value, nil
 	}
 }
