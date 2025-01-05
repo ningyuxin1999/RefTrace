@@ -131,6 +131,11 @@ func TestMap01(t *testing.T) {
 	testGroovyFile(t, filePath)
 }
 
+func TestLocalVariableDeclaration01(t *testing.T) {
+	filePath := filepath.Join("testdata", "groovy_core", "LocalVariableDeclaration_01.groovy")
+	testGroovyFile(t, filePath)
+}
+
 func TestParseAllTestdataFiles(t *testing.T) {
 	// Get testdata directory
 	testDir := "testdata"

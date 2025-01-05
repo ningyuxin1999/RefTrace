@@ -639,13 +639,21 @@ func (v *ASTBuilder) VisitEnhancedForControl(ctx *EnhancedForControlContext) int
 func (v *ASTBuilder) VisitClassicalForControl(ctx *ClassicalForControlContext) interface{} {
 	closureListExpression := NewEmptyClosureListExpression()
 
-	closureListExpression.AddExpression(v.VisitForInit(ctx.ForInit().(*ForInitContext)).(Expression))
+	var forInitCtx *ForInitContext
+	if ctx.ForInit() != nil {
+		forInitCtx = ctx.ForInit().(*ForInitContext)
+	}
+	var forUpdateCtx *ForUpdateContext
+	if ctx.ForUpdate() != nil {
+		forUpdateCtx = ctx.ForUpdate().(*ForUpdateContext)
+	}
+	closureListExpression.AddExpression(v.VisitForInit(forInitCtx).(Expression))
 	if ctx.Expression() != nil {
 		closureListExpression.AddExpression(v.Visit(ctx.Expression()).(Expression))
 	} else {
 		closureListExpression.AddExpression(EMPTY_EXPRESSION)
 	}
-	closureListExpression.AddExpression(v.VisitForUpdate(ctx.ForUpdate().(*ForUpdateContext)).(Expression))
+	closureListExpression.AddExpression(v.VisitForUpdate(forUpdateCtx).(Expression))
 
 	var foo Expression = closureListExpression
 
