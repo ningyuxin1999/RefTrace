@@ -2807,7 +2807,7 @@ func (v *ASTBuilder) VisitParExpression(ctx *ParExpressionContext) interface{} {
 	if level == nil {
 		level = 0
 	}
-	expression.SetNodeMetaData(INSIDE_PARENTHESES_LEVEL, level.(int)+1)
+	expression.PutNodeMetaData(INSIDE_PARENTHESES_LEVEL, level.(int)+1)
 
 	return configureAST(expression, ctx)
 }
