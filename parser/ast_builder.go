@@ -100,6 +100,10 @@ type SyntaxException struct {
 	StopCharPosition  int
 }
 
+func (e *SyntaxException) Error() string {
+	return e.String()
+}
+
 // Implement the String method for SyntaxException
 func (e *SyntaxException) String() string {
 	return fmt.Sprintf("SyntaxException: %s (line %d, char %d to line %d, char %d)",

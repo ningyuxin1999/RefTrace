@@ -173,7 +173,7 @@ func BuildAST(filePath string) (*ModuleNode, error) {
 	// First, build the Concrete Syntax Tree (CST)
 	parseResult, err := BuildCST(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build CST: %w", err)
+		return nil, fmt.Errorf("%s: failed to build CST: %w", filePath, err)
 	}
 
 	// Now, build the AST
@@ -181,7 +181,13 @@ func BuildAST(filePath string) (*ModuleNode, error) {
 	func() {
 		defer func() {
 			if r := recover(); r != nil {
-				err = fmt.Errorf("panic while building AST: %v", r)
+				// Check if this is a SyntaxException
+				if syntaxErr, ok := r.(*SyntaxException); ok {
+					err = fmt.Errorf("%s: %w", filePath, syntaxErr)
+				} else {
+					// This is an unexpected panic
+					err = fmt.Errorf("%s: panic while building AST (likely a bug in RefTrace): %v", filePath, r)
+				}
 			}
 		}()
 		builder := NewASTBuilder(filePath)

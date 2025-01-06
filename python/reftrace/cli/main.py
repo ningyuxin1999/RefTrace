@@ -125,12 +125,14 @@ def cli():
 def lint(rules_file: str, directory: str, debug: bool, quiet: bool):
     """Lint Nextflow (.nf) files using custom rules."""
     if not os.path.exists(rules_file):
-        click.secho(f"No {rules_file} found in current directory", fg="red")
-        click.echo("\nTo get started:")
-        click.echo("1. Run 'reftrace generate' to create a template rules file")
-        click.echo("2. Edit rules.py to customize the linting rules")
-        click.echo("3. Run 'reftrace lint' to check your Nextflow files")
-        sys.exit(1)
+        click.secho(f"No {rules_file} found. Generating default rules file...", fg="yellow")
+        # Read the template from the fixtures
+        template = pkgutil.get_data('reftrace', 'fixtures/rules.py').decode('utf-8')
+        
+        with open(rules_file, 'w') as f:
+            f.write(template)
+        
+        click.secho(f"Created {rules_file} with default rules!", fg="green")
 
     # Add initial feedback
     click.secho(f"Loading rules from {rules_file}...", fg="cyan")

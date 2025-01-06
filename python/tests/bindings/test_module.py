@@ -60,3 +60,22 @@ process CAT_FASTQ {
         assert len(labels) == 1
         label = labels[0]
         assert label.label == "process_single"
+
+
+def test_workflow_structure():
+    content = """
+class MyClass {
+    // Invalid - missing return type and modifiers
+    myMethod() {
+        println "Hello"
+    }
+}
+"""
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.nf') as tmp:
+        tmp.write(content)
+        tmp.flush()
+        
+        # Create module from file
+        with pytest.raises(RuntimeError):
+            module = Module.from_file(tmp.name)
+        
