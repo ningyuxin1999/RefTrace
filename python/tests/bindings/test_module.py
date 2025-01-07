@@ -34,7 +34,9 @@ process CAT_FASTQ {
         tmp.flush()
         
         # Create module from file
-        module = Module.from_file(tmp.name)
+        module_result = Module.from_file(tmp.name)
+        assert module_result.error is None
+        module = module_result.module
         
         # Should have one process
         assert len(module.processes) == 1
@@ -76,6 +78,7 @@ class MyClass {
         tmp.flush()
         
         # Create module from file
-        with pytest.raises(RuntimeError):
-            module = Module.from_file(tmp.name)
+        module_result = Module.from_file(tmp.name)
+        assert module_result.error is not None
+        assert module_result.error.likely_rt_bug == False
         

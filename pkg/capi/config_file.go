@@ -36,9 +36,16 @@ func ConfigFile_New(filePath *C.char) *C.char {
 	// Parse the AST
 	ast, err := parser.BuildAST(goPath)
 	if err != nil {
+		parseError := &pb.ParseError{}
+		likelyRtBug := false
+		if _, ok := err.(*parser.SyntaxException); ok {
+			likelyRtBug = true
+		}
+		parseError.LikelyRtBug = likelyRtBug
+		parseError.Error = err.Error()
 		return serializeResult(&pb.ConfigFileResult{
 			Result: &pb.ConfigFileResult_Error{
-				Error: err.Error(),
+				Error: parseError,
 			},
 		})
 	}
@@ -66,12 +73,7 @@ func ConfigFile_Free(ptr *C.char) {
 func serializeResult(result *pb.ConfigFileResult) *C.char {
 	bytes, err := proto.Marshal(result)
 	if err != nil {
-		errorResult := &pb.ConfigFileResult{
-			Result: &pb.ConfigFileResult_Error{
-				Error: "serialization error: " + err.Error(),
-			},
-		}
-		bytes, _ = proto.Marshal(errorResult)
+		panic("serialization error: " + err.Error())
 	}
 	return C.CString(base64.StdEncoding.EncodeToString(bytes))
 }

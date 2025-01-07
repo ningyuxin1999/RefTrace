@@ -63,7 +63,22 @@ def run_lint(directory: str, rules_file: str, debug: bool = False) -> List[LintR
     nf_files = find_nf_files(directory)
     with click.progressbar(nf_files, label='Linting Nextflow files', show_pos=True) as files:
         for nf_file in files:
-            module = Module.from_file(nf_file)
+            module_result = Module.from_file(nf_file)
+            if module_result.error:
+                if module_result.error.likely_rt_bug:
+                    # Internal error - should be reported as a bug
+                    click.secho(f"Internal error parsing {nf_file}:", fg="red", err=True)
+                    click.secho(f"  {module_result.error}", fg="red", err=True)
+                    click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
+                    sys.exit(1)
+                else:
+                    # User error - malformed Nextflow file
+                    click.secho(f"Failed to parse {nf_file}:", fg="red")
+                    click.secho(f"  {module_result.error}", fg="red")
+                    continue
+            else:
+                module = module_result.module
+
             module_results = LintResults(
                 module_path=nf_file,
                 errors=[],
@@ -84,7 +99,21 @@ def run_lint(directory: str, rules_file: str, debug: bool = False) -> List[LintR
     config_files = find_config_files(directory)
     with click.progressbar(config_files, label='Linting config files', show_pos=True) as files:
         for config_file in files:
-            config = ConfigFile.from_file(config_file)
+            config_result = ConfigFile.from_file(config_file)
+            if config_result.error:
+                if config_result.error.likely_rt_bug:
+                    # Internal error - should be reported as a bug
+                    click.secho(f"Internal error parsing {nf_file}:", fg="red", err=True)
+                    click.secho(f"  {module_result.error}", fg="red", err=True)
+                    click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
+                    sys.exit(1)
+                else:
+                    # User error - malformed Nextflow file
+                    click.secho(f"Failed to parse {nf_file}:", fg="red")
+                    click.secho(f"  {module_result.error}", fg="red")
+                    continue
+            else:
+                config = config_result.config_file
             config_results = LintResults(
                 module_path=config_file,
                 errors=[],
@@ -187,6 +216,65 @@ def generate(force: bool):
     click.echo("\nTo get started:")
     click.echo("1. Edit rules.py to customize the linting rules")
     click.echo("2. Run 'reftrace lint' to check your Nextflow files")
+
+@cli.command()
+@click.option('--rules', '-r', 'rules_file', 
+              type=click.Path(),
+              default='rules.py',
+              help="Path to rules file (default: rules.py in current directory)")
+@click.option('--directory', '-d', 
+              type=click.Path(exists=True),
+              default='.',
+              help="Directory containing .nf files (default: current directory)")
+@click.option('--debug', is_flag=True, 
+              help="Enable debug output")
+@click.option('--quiet', '-q', is_flag=True,
+              help="Only show errors, not warnings")
+def quicklint(rules_file: str, directory: str, debug: bool, quiet: bool):
+    """Alias for lint command - Lint Nextflow (.nf) files using custom rules."""
+    if not os.path.exists(rules_file):
+        click.secho(f"No {rules_file} found. Generating default rules file...", fg="yellow")
+        # Read the template from the fixtures
+        template = pkgutil.get_data('reftrace', 'fixtures/rules.py').decode('utf-8')
+        
+        with open(rules_file, 'w') as f:
+            f.write(template)
+        
+        click.secho(f"Created {rules_file} with default rules!", fg="green")
+
+    # Add initial feedback
+    click.secho(f"Loading rules from {rules_file}...", fg="cyan")
+    results = run_lint(directory, rules_file, debug)
+
+    has_errors = False
+    error_count = 0
+    warning_count = 0
+
+    for result in results:
+        if result.warnings or result.errors:
+            click.echo(f"\nModule: {click.style(result.module_path, fg='cyan')}")
+
+        if not quiet:
+            for warning in result.warnings:
+                warning_count += 1
+                click.secho(f"  Warning on line {warning.line}: {warning.warning}", fg="yellow")
+
+        for error in result.errors:
+            error_count += 1
+            has_errors = True
+            click.secho(f"  Error on line {error.line}: {error.error}", fg="red")
+
+    # Add summary at the end
+    click.echo("\nSummary:")
+    if error_count:
+        click.secho(f"Found {error_count} errors", fg="red")
+    if warning_count and not quiet:
+        click.secho(f"Found {warning_count} warnings", fg="yellow")
+    if not (error_count or warning_count):
+        click.secho("No issues found!", fg="green")
+
+    if has_errors:
+        sys.exit(1)
 
 if __name__ == "__main__":
     cli()

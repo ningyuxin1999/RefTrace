@@ -39,23 +39,21 @@ func (m *Module) ToProto() *pb.Module {
 //export Module_New
 func Module_New(filePath *C.char) *C.char {
 	goPath := C.GoString(filePath)
-	module, err := BuildModuleInternal(goPath)
+	module, err, likelyBug := BuildModuleInternal(goPath)
 
 	result := &pb.ModuleResult{}
+	parseError := &pb.ParseError{}
 	if err != nil {
-		result.Result = &pb.ModuleResult_Error{Error: err.Error()}
+		parseError.LikelyRtBug = likelyBug
+		parseError.Error = err.Error()
+		result.Result = &pb.ModuleResult_Error{Error: parseError}
 	} else {
 		result.Result = &pb.ModuleResult_Module{Module: module.ToProto()}
 	}
 
 	bytes, err := proto.Marshal(result)
 	if err != nil {
-		errorResult := &pb.ModuleResult{
-			Result: &pb.ModuleResult_Error{
-				Error: "serialization error: " + err.Error(),
-			},
-		}
-		bytes, _ = proto.Marshal(errorResult)
+		panic("serialization error: " + err.Error())
 	}
 
 	return C.CString(base64.StdEncoding.EncodeToString(bytes))
@@ -66,10 +64,13 @@ func Module_Free(ptr *C.char) {
 	C.free(unsafe.Pointer(ptr))
 }
 
-func BuildModuleInternal(filePath string) (*Module, error) {
+func BuildModuleInternal(filePath string) (*Module, error, bool) {
 	ast, err := parser.BuildAST(filePath)
 	if err != nil {
-		return nil, err
+		if _, ok := err.(*parser.SyntaxException); ok {
+			return nil, err, true
+		}
+		return nil, err, false
 	}
 
 	dslVersion := 2
@@ -89,7 +90,7 @@ func BuildModuleInternal(filePath string) (*Module, error) {
 	}
 
 	if dslVersion == 1 {
-		return nil, fmt.Errorf("only DSL2 scripts are supported. Found explicit DSL1 declaration in %s", filePath)
+		return nil, fmt.Errorf("only DSL2 scripts are supported. Found explicit DSL1 declaration in %s", filePath), false
 	}
 
 	includeVisitor := nf.NewIncludeVisitor()
@@ -113,7 +114,7 @@ func BuildModuleInternal(filePath string) (*Module, error) {
 	}
 
 	if hasErrors {
-		return nil, fmt.Errorf("errors found in processes in %s: %s", filePath, strings.Join(processErrors, "; "))
+		return nil, fmt.Errorf("errors found in processes in %s: %s", filePath, strings.Join(processErrors, "; ")), false
 	}
 
 	return &Module{
@@ -121,5 +122,5 @@ func BuildModuleInternal(filePath string) (*Module, error) {
 		Processes:  processes,
 		Includes:   includes,
 		DSLVersion: dslVersion,
-	}, nil
+	}, nil, false
 }

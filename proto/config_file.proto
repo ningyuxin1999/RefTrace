@@ -4,10 +4,12 @@ package nf;
 
 option go_package = "nf/proto";
 
+import "proto/common.proto";
+
 message ConfigFileResult {
     oneof result {
       ConfigFile config_file = 1;
-      string error = 2;
+      ParseError error = 2;
     }
 }
 

@@ -1,11 +1,17 @@
-from ..proto import config_file_pb2
+from ..proto import common_pb2, config_file_pb2
 from .lib import _lib
 import ctypes
 import base64
-from typing import List
+from typing import List, Union
 from dataclasses import dataclass
 from functools import cached_property
 from ..configfile import ProcessScope
+
+@dataclass
+class ConfigFileResult:
+    """Result type for ConfigFile creation that can contain either a ConfigFile or an error."""
+    config_file: Union['ConfigFile', None]
+    error: Union[common_pb2.ParseError, None]
 
 @dataclass
 class ConfigFile:
@@ -13,11 +19,14 @@ class ConfigFile:
     _proto: config_file_pb2.ConfigFile  # Internal protobuf representation
 
     @classmethod
-    def from_file(cls, filepath: str) -> 'ConfigFile':
+    def from_file(cls, filepath: str) -> 'ConfigFileResult':
         encoded_path = filepath.encode('utf-8')
         result_ptr = _lib.ConfigFile_New(encoded_path)
         if not result_ptr:
-            raise RuntimeError("Failed to create config file")
+            return ConfigFileResult(
+                config_file=None, 
+                error=common_pb2.ParseError(likely_rt_bug=True, error="Failed to create config file")
+            )
             
         try:
             # Get base64 string from pointer and decode it
@@ -28,9 +37,9 @@ class ConfigFile:
             result.ParseFromString(bytes_data)
             
             if result.HasField('error'):
-                raise RuntimeError(result.error)
+                return ConfigFileResult(config_file=None, error=result.error)
                 
-            return cls(_proto=result.config_file)
+            return ConfigFileResult(config_file=cls(_proto=result.config_file), error=None)
         finally:
             _lib.ConfigFile_Free(result_ptr)
 

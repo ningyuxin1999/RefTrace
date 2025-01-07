@@ -4,6 +4,8 @@ package nf;
 
 option go_package = "nf/proto";
 
+import "proto/common.proto";
+
 // Directive represents any Nextflow process directive
 message Directive {
     int32 line = 1;  // Common field for all directives
@@ -249,7 +251,7 @@ message UnknownDirective {
 message ModuleResult {
     oneof result {
       Module module = 1;
-      string error = 2;
+      ParseError error = 2;
     }
 }
 

@@ -24,7 +24,9 @@ if (!params.skip_bbsplit && params.bbsplit_fasta_list) {
         tmp.write(content)
         tmp.flush()
         
-        config = ConfigFile.from_file(tmp.name)
+        config_result = ConfigFile.from_file(tmp.name)
+        assert config_result.error is None
+        config = config_result.config_file
         
         # Should have one process scope
         assert len(config.process_scopes) == 1
@@ -70,7 +72,9 @@ def test_parse_config_duplicate_arg():
         tmp.write(content)
         tmp.flush()
         
-        config = ConfigFile.from_file(tmp.name)
+        config_result = ConfigFile.from_file(tmp.name)
+        assert config_result.error is None
+        config = config_result.config_file
         
         # Basic structure validation
         assert len(config.process_scopes) == 1

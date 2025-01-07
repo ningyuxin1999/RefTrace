@@ -23,7 +23,10 @@ build-go:
 	go build ./cmd/reftrace
 
 proto:
-	protoc -I=. --go_out=. --python_out=python/reftrace proto/*
+	protoc -I=. --go_out=. --python_out=python/reftrace --pyi_out=python/reftrace proto/*
+	# fix imports in generated python files
+	find python/reftrace/proto -name "*_pb2.py" -exec sed -i.bak 's/from proto/from reftrace.proto/g' {} \;
+	find python/reftrace/proto -name "*.bak" -delete
 	
 # Build the Python package
 build-python: lib

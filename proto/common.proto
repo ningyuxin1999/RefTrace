@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package nf;
+
+option go_package = "nf/proto";
+
+message ParseError {
+    string error = 1;
+    bool likely_rt_bug = 2;
+}

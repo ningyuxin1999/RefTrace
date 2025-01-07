@@ -1,11 +1,17 @@
-from ..proto import module_pb2
+from ..proto import common_pb2, module_pb2
 from .lib import _lib
 import ctypes
 import base64
-from typing import List
+from typing import List, Union, Tuple
 from dataclasses import dataclass
 from functools import cached_property
 from .process import Process
+
+@dataclass
+class ModuleResult:
+    """Result type for Module creation that can contain either a Module or an error."""
+    module: Union['Module', None]
+    error: Union[common_pb2.ParseError, None]
 
 @dataclass
 class Module:
@@ -13,24 +19,24 @@ class Module:
     _proto: module_pb2.Module  # Internal protobuf representation
 
     @classmethod
-    def from_file(cls, filepath: str) -> 'Module':
+    def from_file(cls, filepath: str) -> 'ModuleResult':
         encoded_path = filepath.encode('utf-8')
         result_ptr = _lib.Module_New(encoded_path)
         if not result_ptr:
-            raise RuntimeError("Failed to create module")
+            return ModuleResult(module=None, error=common_pb2.ParseError(likely_rt_bug=True, error="Failed to create module"))
             
         try:
             # Get base64 string from pointer and decode it
             encoded_str = ctypes.cast(result_ptr, ctypes.c_char_p).value.decode('utf-8')
             bytes_data = base64.b64decode(encoded_str)
             
-            result = module_pb2.ModuleResult()
+            result: module_pb2.ModuleResult = module_pb2.ModuleResult()
             result.ParseFromString(bytes_data)
             
             if result.HasField('error'):
-                raise RuntimeError(result.error)
+                return ModuleResult(module=None, error=result.error)
                 
-            return cls(_proto=result.module)
+            return ModuleResult(module=cls(_proto=result.module), error=None)
         finally:
             _lib.Module_Free(result_ptr)
 
