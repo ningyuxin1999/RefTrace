@@ -138,26 +138,34 @@ def run_quicklint(directory: str, rules_file: str, debug: bool = False) -> List[
     module_rules, config_rules = load_rules(rules_file)
     
     # Lint Nextflow files using new parse_modules API with progress bar
-    with click.progressbar(length=100, label='Linting Nextflow files', show_pos=True) as bar:
+    with click.progressbar(length=0, label='Linting Nextflow files', 
+                         show_pos=True, 
+                         show_percent=True,
+                         show_eta=False,
+                         width=40) as bar:
         def progress_callback(current: int, total: int):
-            # Update progress bar to the current percentage
-            if total > 0:  # Avoid division by zero
-                bar.update(100 * current / total - bar.pos)
+            # First time we get the total, set up the progress bar
+            if bar.length == 0:
+                bar.length = total
+            bar.update(current - bar.pos)
                 
         module_results = parse_modules(directory, progress_callback)
+
+        user_errors = False
         
         for module_result in module_results:
             if module_result.error:
                 if module_result.error.likely_rt_bug:
                     # Internal error - should be reported as a bug
-                    click.secho(f"Internal error parsing {module_result.filepath}:", fg="red", err=True)
+                    click.secho(f"\nInternal error parsing {module_result.filepath}:", fg="red", err=True)
                     click.secho(f"  {module_result.error.error}", fg="red", err=True)
                     click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
                     sys.exit(1)
                 else:
                     # User error - malformed Nextflow file
-                    click.secho(f"Failed to parse {module_result.filepath}:", fg="red")
+                    click.secho(f"\nFailed to parse {module_result.filepath}:", fg="red")
                     click.secho(f"  {module_result.error.error}", fg="red")
+                    user_errors = True
                     continue
 
             lint_results = LintResults(
@@ -176,6 +184,9 @@ def run_quicklint(directory: str, rules_file: str, debug: bool = False) -> List[
 
             results.append(lint_results)
 
+    if user_errors:
+        sys.exit(1)
+
     # Lint config files
     config_files = find_config_files(directory)
     with click.progressbar(config_files, label='Linting config files', show_pos=True) as files:
@@ -184,17 +195,16 @@ def run_quicklint(directory: str, rules_file: str, debug: bool = False) -> List[
             if config_result.error:
                 if config_result.error.likely_rt_bug:
                     # Internal error - should be reported as a bug
-                    click.secho(f"Internal error parsing {nf_file}:", fg="red", err=True)
-                    click.secho(f"  {module_result.error}", fg="red", err=True)
+                    click.secho(f"Internal error parsing {config_file}:", fg="red", err=True)
+                    click.secho(f"  {config_result.error}", fg="red", err=True)
                     click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
                     sys.exit(1)
                 else:
                     # User error - malformed Nextflow file
-                    click.secho(f"Failed to parse {nf_file}:", fg="red")
-                    click.secho(f"  {module_result.error}", fg="red")
+                    click.secho(f"Failed to parse {config_file}:", fg="red")
+                    click.secho(f"  {config_result.error}", fg="red")
                     continue
-            else:
-                config = config_result.config_file
+
             config_results = LintResults(
                 module_path=config_file,
                 errors=[],
@@ -205,7 +215,7 @@ def run_quicklint(directory: str, rules_file: str, debug: bool = False) -> List[
                 if debug:
                     click.echo(f"Running {rule.__name__} on {config_file}")
 
-                rule_result = rule(config)
+                rule_result = rule(config_result.config_file)
                 config_results.errors.extend(rule_result.errors)
                 config_results.warnings.extend(rule_result.warnings)
 
