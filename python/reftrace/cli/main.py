@@ -203,6 +203,7 @@ def run_quicklint(directory: str, rules_file: str, debug: bool = False) -> List[
                     # User error - malformed Nextflow file
                     click.secho(f"Failed to parse {config_file}:", fg="red")
                     click.secho(f"  {config_result.error}", fg="red")
+                    user_errors = True
                     continue
 
             config_results = LintResults(
@@ -220,6 +221,9 @@ def run_quicklint(directory: str, rules_file: str, debug: bool = False) -> List[
                 config_results.warnings.extend(rule_result.warnings)
 
             results.append(config_results)
+
+    if user_errors:
+        sys.exit(1)
 
     return results
 
@@ -242,8 +246,8 @@ def cli():
               help="Enable debug output")
 @click.option('--quiet', '-q', is_flag=True,
               help="Only show errors, not warnings")
-def lint(rules_file: str, directory: str, debug: bool, quiet: bool):
-    """Lint Nextflow (.nf) files using custom rules."""
+def slowlint(rules_file: str, directory: str, debug: bool, quiet: bool):
+    """(Deprecated) Lint Nextflow (.nf) files using custom rules."""
     if not os.path.exists(rules_file):
         click.secho(f"No {rules_file} found. Generating default rules file...", fg="yellow")
         # Read the template from the fixtures
@@ -321,8 +325,8 @@ def generate(force: bool):
               help="Enable debug output")
 @click.option('--quiet', '-q', is_flag=True,
               help="Only show errors, not warnings")
-def quicklint(rules_file: str, directory: str, debug: bool, quiet: bool):
-    """Alias for lint command - Lint Nextflow (.nf) files using custom rules."""
+def lint(rules_file: str, directory: str, debug: bool, quiet: bool):
+    """Lint Nextflow (.nf) files using custom rules."""
     if not os.path.exists(rules_file):
         click.secho(f"No {rules_file} found. Generating default rules file...", fg="yellow")
         # Read the template from the fixtures

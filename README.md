@@ -68,6 +68,10 @@ module = Module("path/to/nextflow.nf")
 - The parser is not perfect. It doesn't seek to handle all of Groovy, but enough to work in practice. Even so, test coverage could be better. If you encounter a
 parsing bug, please open an issue.
 
+## Test Data
+
+The files in the `testdata/groovy_core` directory are derived from the Apache Groovy project's test suite and are licensed under the Apache License 2.0. The original source files can be found in the [Apache Groovy repository](https://github.com/apache/groovy/tree/master/src/test-resources/core).
+
 ## Acknowledgements
 
 We would like to express our gratitude to the following:
