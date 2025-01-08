@@ -1,8 +1,11 @@
+from typing import List
 import pytest
 import tempfile
 from pathlib import Path
-from reftrace import Module
+from reftrace import Module, parse_modules, ModuleResult
 from reftrace.directives import ContainerFormat
+import os
+
 def test_process_and_container():
     # Create temporary file with the same process content
     content = """
@@ -81,4 +84,70 @@ class MyClass {
         module_result = Module.from_file(tmp.name)
         assert module_result.error is not None
         assert module_result.error.likely_rt_bug == False
+        
+
+def test_parse_modules():
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a valid module file
+        valid_content = """
+        process VALID_PROCESS {
+            input:
+                path input_file
+            
+            output:
+                path "output.txt"
+            
+            script:
+            '''
+            echo "processing $input_file" > output.txt
+            '''
+        }
+        """
+        
+        # Create an invalid module file (using undefined MyClass)
+        invalid_content = """
+        class MyClass {
+            // Invalid - missing return type and modifiers
+            myMethod() {
+                println "Hello"
+            }
+        }
+        """
+        
+        # Write the files
+        with open(os.path.join(tmpdir, "valid.nf"), "w") as f:
+            f.write(valid_content)
+        with open(os.path.join(tmpdir, "invalid.nf"), "w") as f:
+            f.write(invalid_content)
+            
+        # Track progress
+        progress_calls = []
+        def progress_callback(current, total):
+            progress_calls.append((current, total))
+            
+        # Process the modules
+        results: List[ModuleResult] = parse_modules(tmpdir, progress_callback)
+        
+        # Verify progress tracking
+        assert len(progress_calls) == 2  # Should be called twice
+        assert progress_calls[-1] == (2, 2)  # Final call should be (2, 2)
+        
+        # Check results
+        assert len(results) == 2
+        
+        # Count successes and failures
+        successes = [r for r in results if r.module is not None]
+        failures = [r for r in results if r.error is not None]
+        
+        assert len(successes) == 1
+        assert len(failures) == 1
+        
+        # Verify the valid module
+        valid_result = next(r for r in results if r.module is not None)
+        assert "VALID_PROCESS" in valid_result.module.processes[0].name
+        
+        # Verify the invalid module
+        invalid_result = next(r for r in results if r.error is not None)
+        assert "myMethod" in invalid_result.error.error  # Error should mention MyClass
         

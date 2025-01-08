@@ -249,10 +249,16 @@ message UnknownDirective {
 
 // ModuleResult represents the result of parsing a Nextflow module file
 message ModuleResult {
+    string file_path = 1;
     oneof result {
-      Module module = 1;
-      ParseError error = 2;
+      Module module = 2;
+      ParseError error = 3;
     }
+}
+
+// ModuleListResult represents the result of parsing multiple Nextflow module files
+message ModuleListResult {
+    repeated ModuleResult results = 1;
 }
 
 // Module represents a Nextflow module file

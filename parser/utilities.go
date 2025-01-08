@@ -183,7 +183,7 @@ func BuildAST(filePath string) (*ModuleNode, error) {
 			if r := recover(); r != nil {
 				// Check if this is a SyntaxException
 				if syntaxErr, ok := r.(*SyntaxException); ok {
-					err = fmt.Errorf("%s: %w", filePath, syntaxErr)
+					err = syntaxErr
 				} else {
 					// This is an unexpected panic
 					err = fmt.Errorf("%s: panic while building AST (likely a bug in RefTrace): %v", filePath, r)
