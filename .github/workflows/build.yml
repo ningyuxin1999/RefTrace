@@ -130,10 +130,12 @@ jobs:
             # Add GOPATH/bin to PATH
             export PATH="$(go env GOPATH)/bin:$PATH"
 
+            pip install setuptools_scm
+            echo -e "\nSetuptools SCM Version BEFORE proto:"
+            python3 -m setuptools_scm
+
             # Generate protocol buffers
             make proto
-
-            pip install setuptools_scm
 
             echo -e "\nGit Status AFTER proto generation:"
             git status
