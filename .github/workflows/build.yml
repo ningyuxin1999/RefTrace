@@ -32,10 +32,19 @@ jobs:
           fetch-tags: true
           fetch-depth: 0
 
+      - name: Set up Python
+        if: matrix.os == 'macos-latest'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install setuptools_scm
+        if: matrix.os == 'macos-latest'
+        run: pip install setuptools_scm
+
       - name: Debug version before build
         if: matrix.os == 'macos-latest'
         run: |
-          python3 -m pip install setuptools_scm
           echo "Git Status:"
           git status
           echo -e "\nGit Tags:"
