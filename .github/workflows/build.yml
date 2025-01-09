@@ -128,6 +128,11 @@ jobs:
           name: wheels-${{ matrix.os }}
           path: dist/*.whl
 
+      - name: Show generated version file
+        run: |
+          echo "Contents of _version.py:"
+          cat python/reftrace/_version.py
+
   publish:
     name: Publish to PyPI
     if: inputs.publish_to != 'none'
