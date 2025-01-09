@@ -12,6 +12,11 @@ on:
           - 'test-pypi'
           - 'pypi'
         default: 'none'
+      mac_only:
+        description: 'Build only macOS wheels'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   build_wheels:
@@ -19,13 +24,26 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: ${{ fromJSON(inputs.mac_only && '["macos-latest"]' || '["ubuntu-latest", "macos-latest"]') }}
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
           fetch-depth: 0
+
+      - name: Debug version before build
+        if: matrix.os == 'macos-latest'
+        run: |
+          python3 -m pip install setuptools_scm
+          echo "Git Status:"
+          git status
+          echo -e "\nGit Tags:"
+          git tag -l
+          echo -e "\nCurrent Commit:"
+          git rev-parse HEAD
+          echo -e "\nSetuptools SCM Version before build:"
+          python3 -m setuptools_scm
 
       # Download the ANTLR jar file into the parser directory
       - name: Download ANTLR jar
@@ -129,6 +147,7 @@ jobs:
           path: dist/*.whl
 
       - name: Show generated version file
+        if: matrix.os == 'macos-latest'
         run: |
           echo "Contents of _version.py:"
           cat python/reftrace/_version.py
