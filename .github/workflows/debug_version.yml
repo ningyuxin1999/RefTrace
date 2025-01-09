@@ -1,0 +1,33 @@
+name: Debug Version
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check_version:
+    name: Check setuptools_scm version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install setuptools_scm
+        run: pip install setuptools_scm
+
+      - name: Debug Git and Version Info
+        run: |
+          echo "Git Status:"
+          git status
+          echo -e "\nGit Tags:"
+          git tag -l
+          echo -e "\nCurrent Commit:"
+          git rev-parse HEAD
+          echo -e "\nSetuptools SCM Version:"
+          python -m setuptools_scm

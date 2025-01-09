@@ -49,3 +49,10 @@ There are two sets of tests: `reft-go/nf` tests the exposing of the Nextflow DSL
 ```
 pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ reftrace
 ```
+
+## Remove a Tag
+
+```
+git push --delete origin <tag>
+git tag --delete <tag>
+```
