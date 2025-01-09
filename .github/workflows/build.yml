@@ -133,6 +133,8 @@ jobs:
             # Generate protocol buffers
             make proto
 
+            pip install setuptools_scm
+
             echo -e "\nGit Status AFTER proto generation:"
             git status
             echo -e "\nSetuptools SCM Version AFTER proto:"
