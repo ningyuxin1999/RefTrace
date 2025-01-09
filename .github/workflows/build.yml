@@ -133,8 +133,18 @@ jobs:
             # Generate protocol buffers
             make proto
 
+            echo -e "\nGit Status AFTER proto generation:"
+            git status
+            echo -e "\nSetuptools SCM Version AFTER proto:"
+            python3 -m setuptools_scm
+
             # Run go generate
             go generate ./...
+
+            echo -e "\nGit Status AFTER go generate:"
+            git status
+            echo -e "\nSetuptools SCM Version AFTER go generate:"
+            python3 -m setuptools_scm
 
             # Build for arm mac
             go build -buildmode=c-shared \
