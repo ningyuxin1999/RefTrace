@@ -32,3 +32,4 @@ dist/
 python/reftrace/proto/
 docs/build/
 python/reftrace/_version.py
+parser/groovy_parser.go
