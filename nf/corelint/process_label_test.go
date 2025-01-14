@@ -63,7 +63,7 @@ process FOO {
 			}
 
 			// Parse the file
-			module, err := nf.BuildModule(processFile)
+			module, err, _ := nf.BuildModule(processFile)
 			if err != nil {
 				t.Fatal("Failed to parse process file:", err)
 			}
@@ -128,7 +128,7 @@ process FOO {
 				t.Fatal("Failed to write process file:", err)
 			}
 
-			module, err := nf.BuildModule(processFile)
+			module, err, _ := nf.BuildModule(processFile)
 			if err != nil {
 				t.Fatal("Failed to parse process file:", err)
 			}
@@ -182,7 +182,7 @@ process FOO {
 				t.Fatal("Failed to write process file:", err)
 			}
 
-			module, err := nf.BuildModule(processFile)
+			module, err, _ := nf.BuildModule(processFile)
 			if err != nil {
 				t.Fatal("Failed to parse process file:", err)
 			}
@@ -237,7 +237,7 @@ process FOO {
 				t.Fatal("Failed to write process file:", err)
 			}
 
-			module, err := nf.BuildModule(processFile)
+			module, err, _ := nf.BuildModule(processFile)
 			if err != nil {
 				t.Fatal("Failed to parse process file:", err)
 			}
@@ -289,7 +289,7 @@ process FOO {
 				t.Fatal("Failed to write process file:", err)
 			}
 
-			module, err := nf.BuildModule(processFile)
+			module, err, _ := nf.BuildModule(processFile)
 			if err != nil {
 				t.Fatal("Failed to parse process file:", err)
 			}
@@ -344,7 +344,7 @@ process FOO {
 				t.Fatal("Failed to write process file:", err)
 			}
 
-			module, err := nf.BuildModule(processFile)
+			module, err, _ := nf.BuildModule(processFile)
 			if err != nil {
 				t.Fatal("Failed to parse process file:", err)
 			}

@@ -2,6 +2,7 @@ package nf
 
 import (
 	"fmt"
+	pb "reft-go/nf/proto"
 	"reft-go/parser"
 	"strings"
 
@@ -15,10 +16,30 @@ type Module struct {
 	DSLVersion int
 }
 
-func BuildModule(filePath string) (*Module, error) {
+func (m *Module) ToProto() *pb.Module {
+	protoModule := &pb.Module{
+		Path:       m.Path,
+		DslVersion: int32(m.DSLVersion),
+	}
+
+	for _, p := range m.Processes {
+		protoModule.Processes = append(protoModule.Processes, p.ToProto())
+	}
+
+	for _, inc := range m.Includes {
+		protoModule.Includes = append(protoModule.Includes, inc.ToProto())
+	}
+
+	return protoModule
+}
+
+func BuildModule(filePath string) (*Module, error, bool) {
 	ast, err := parser.BuildAST(filePath)
 	if err != nil {
-		return nil, err
+		if _, ok := err.(*parser.SyntaxException); ok {
+			return nil, err, false
+		}
+		return nil, err, true
 	}
 
 	dslVersion := 2
@@ -38,16 +59,16 @@ func BuildModule(filePath string) (*Module, error) {
 	}
 
 	if dslVersion == 1 {
-		return nil, fmt.Errorf("only DSL2 scripts are supported. Found explicit DSL1 declaration in %s", filePath)
+		return nil, fmt.Errorf("only DSL2 scripts are supported. Found explicit DSL1 declaration in %s", filePath), false
 	}
 
 	includeVisitor := NewIncludeVisitor()
 	includeVisitor.VisitBlockStatement(ast.StatementBlock)
-	includes := includeVisitor.includes
+	includes := includeVisitor.Includes()
 
 	processVisitor := NewProcessVisitor()
 	processVisitor.VisitBlockStatement(ast.StatementBlock)
-	processes := processVisitor.processes
+	processes := processVisitor.Processes()
 
 	// Collect process errors into error message
 	var processErrors []string
@@ -62,7 +83,7 @@ func BuildModule(filePath string) (*Module, error) {
 	}
 
 	if hasErrors {
-		return nil, fmt.Errorf("errors found in processes in %s: %s", filePath, strings.Join(processErrors, "; "))
+		return nil, fmt.Errorf("errors found in processes in %s: %s", filePath, strings.Join(processErrors, "; ")), false
 	}
 
 	return &Module{
@@ -70,7 +91,7 @@ func BuildModule(filePath string) (*Module, error) {
 		Processes:  processes,
 		Includes:   includes,
 		DSLVersion: dslVersion,
-	}, nil
+	}, nil, false
 }
 
 func getWorkflows(stmt *parser.BlockStatement) []Workflow {

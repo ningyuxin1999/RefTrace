@@ -37,7 +37,7 @@ process FOO {
 	}
 
 	// Parse the file
-	module, err := nf.BuildModule(processFile)
+	module, err, _ := nf.BuildModule(processFile)
 	if err != nil {
 		t.Fatal("Failed to parse process file:", err)
 	}
@@ -84,7 +84,7 @@ process FOO {
 	}
 
 	// Parse the file
-	module, err := nf.BuildModule(processFile)
+	module, err, _ := nf.BuildModule(processFile)
 	if err != nil {
 		t.Fatal("Failed to parse process file:", err)
 	}
@@ -124,7 +124,7 @@ process FOO {
 	}
 
 	// Parse the file - this should fail
-	_, err := nf.BuildModule(processFile)
+	_, err, _ := nf.BuildModule(processFile)
 	if err == nil {
 		t.Fatal("Expected parsing to fail due to invalid container specification, but got no error")
 	}
@@ -164,7 +164,7 @@ process FOO {
 	}
 
 	// Parse the file
-	module, err := nf.BuildModule(processFile)
+	module, err, _ := nf.BuildModule(processFile)
 	if err != nil {
 		t.Fatal("Failed to parse process file:", err)
 	}
@@ -206,7 +206,7 @@ process FOO {
 	}
 
 	// Parse the file
-	module, err := nf.BuildModule(processFile)
+	module, err, _ := nf.BuildModule(processFile)
 	if err != nil {
 		t.Fatal("Failed to parse process file:", err)
 	}
@@ -239,7 +239,7 @@ process FOO {
 	}
 
 	// Parse the file
-	module, err := nf.BuildModule(processFile)
+	module, err, _ := nf.BuildModule(processFile)
 	if err != nil {
 		t.Fatal("Failed to parse process file:", err)
 	}
@@ -402,7 +402,7 @@ func runRuleMustBeTaggedTest(t *testing.T, testName, processContent string, want
 		}
 
 		// Parse the file
-		module, err := nf.BuildModule(processFile)
+		module, err, _ := nf.BuildModule(processFile)
 		if err != nil {
 			t.Fatal("Failed to parse process file:", err)
 		}
@@ -475,7 +475,7 @@ process FOO {
 	}
 
 	// Parse the file
-	module, err := nf.BuildModule(processFile)
+	module, err, _ := nf.BuildModule(processFile)
 	if err != nil {
 		t.Fatal("Failed to parse process file:", err)
 	}
@@ -513,7 +513,7 @@ process FOO {
 	}
 
 	// Parse the file
-	module, err := nf.BuildModule(processFile)
+	module, err, _ := nf.BuildModule(processFile)
 	if err != nil {
 		t.Fatal("Failed to parse process file:", err)
 	}
@@ -667,7 +667,7 @@ process FOO {
 	}
 
 	// Parse the file
-	module, err := nf.BuildModule(processFile)
+	module, err, _ := nf.BuildModule(processFile)
 	if err != nil {
 		t.Fatal("Failed to parse process file:", err)
 	}

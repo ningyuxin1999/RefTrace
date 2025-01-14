@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	pb "reft-go/nf/proto"
 	"reft-go/parser"
 	"sort"
 
@@ -18,6 +19,13 @@ var _ starlark.HasAttrs = (*IncludedItem)(nil)
 type IncludedItem struct {
 	Name  string
 	Alias string
+}
+
+func (i *IncludedItem) ToProto() *pb.IncludedItem {
+	return &pb.IncludedItem{
+		Name:  i.Name,
+		Alias: &i.Alias,
+	}
 }
 
 // Implement starlark.Value interface
@@ -98,6 +106,17 @@ func (is IncludeStatement) Attr(name string) (starlark.Value, error) {
 
 func (is IncludeStatement) AttrNames() []string {
 	return []string{"items", "module_path"}
+}
+
+func (is *IncludeStatement) ToProto() *pb.IncludeStatement {
+	items := make([]*pb.IncludedItem, len(is.Items))
+	for i, item := range is.Items {
+		items[i] = item.ToProto()
+	}
+	return &pb.IncludeStatement{
+		Line:  int32(is.LineNumber),
+		Items: items,
+	}
 }
 
 type IncludeVisitor struct {

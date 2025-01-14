@@ -266,6 +266,7 @@ message Module {
   string path = 1;
   int32 dsl_version = 2;
   repeated Process processes = 3;
+  repeated IncludeStatement includes = 4;
 }
 
 // Process represents a Nextflow process
@@ -273,4 +274,14 @@ message Process {
   string name = 1;
   int32 line = 2;
   repeated Directive directives = 3;
+}
+
+message IncludedItem {
+    string name = 1;
+    optional string alias = 2;
+}
+
+message IncludeStatement {
+    int32 line = 1;
+    repeated IncludedItem items = 2;
 }

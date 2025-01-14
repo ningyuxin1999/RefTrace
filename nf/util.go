@@ -22,7 +22,7 @@ func ProcessDirectory(dir string) ([]*Module, error) {
 			wg.Add(1)
 			go func(path string) {
 				defer wg.Done()
-				module, err := BuildModule(path)
+				module, err, _ := BuildModule(path)
 				if err != nil {
 					mu.Lock()
 					errors = append(errors, fmt.Errorf("%s: %v", path, err))

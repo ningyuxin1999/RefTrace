@@ -214,7 +214,7 @@ func TestPGDB(t *testing.T) {
 
 func TestIfStatementProcess(t *testing.T) {
 	filePath := filepath.Join(getTestDataDir(), "nf-core", "airrflow/modules/local/enchantr/report_file_size.nf")
-	module, err := BuildModule(filePath)
+	module, err, _ := BuildModule(filePath)
 	if err != nil {
 		t.Fatalf("Failed to process file: %v", err)
 	}
@@ -229,7 +229,7 @@ func TestIfStatementProcess(t *testing.T) {
 
 func TestRejectDSL1(t *testing.T) {
 	filePath := filepath.Join(getTestDataDir(), "nf-testdata", "dsl1.nf")
-	_, err := BuildModule(filePath)
+	_, err, _ := BuildModule(filePath)
 	if err == nil {
 		t.Fatal("Expected error when processing explicit DSL1 script, but got none")
 	}
