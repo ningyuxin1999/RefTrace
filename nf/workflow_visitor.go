@@ -2,6 +2,7 @@ package nf
 
 import (
 	"fmt"
+	pb "reft-go/nf/proto"
 	"reft-go/parser"
 )
 
@@ -111,6 +112,14 @@ type Workflow struct {
 	Takes   []string
 	Emits   []string
 	Closure *parser.ClosureExpression
+}
+
+func (w *Workflow) ToProto() *pb.Workflow {
+	return &pb.Workflow{
+		Name:  w.Name,
+		Takes: w.Takes,
+		Emits: w.Emits,
+	}
 }
 
 type WorkflowVisitor struct {

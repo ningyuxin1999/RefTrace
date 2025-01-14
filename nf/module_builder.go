@@ -14,6 +14,8 @@ type Module struct {
 	Processes  []Process
 	Includes   []IncludeStatement
 	DSLVersion int
+	Params     []ParamInfo
+	Workflows  []Workflow
 }
 
 func (m *Module) ToProto() *pb.Module {
@@ -28,6 +30,14 @@ func (m *Module) ToProto() *pb.Module {
 
 	for _, inc := range m.Includes {
 		protoModule.Includes = append(protoModule.Includes, inc.ToProto())
+	}
+
+	for _, param := range m.Params {
+		protoModule.Params = append(protoModule.Params, param.ToProto())
+	}
+
+	for _, workflow := range m.Workflows {
+		protoModule.Workflows = append(protoModule.Workflows, workflow.ToProto())
 	}
 
 	return protoModule
@@ -86,18 +96,22 @@ func BuildModule(filePath string) (*Module, error, bool) {
 		return nil, fmt.Errorf("errors found in processes in %s: %s", filePath, strings.Join(processErrors, "; ")), false
 	}
 
+	paramVisitor := NewParamVisitor()
+	paramVisitor.VisitBlockStatement(ast.StatementBlock)
+	params := paramVisitor.GetSortedParams()
+
+	workflowVisitor := NewWorkflowVisitor()
+	workflowVisitor.VisitBlockStatement(ast.StatementBlock)
+	workflows := workflowVisitor.workflows
+
 	return &Module{
 		Path:       filePath,
 		Processes:  processes,
 		Includes:   includes,
 		DSLVersion: dslVersion,
+		Params:     params,
+		Workflows:  workflows,
 	}, nil, false
-}
-
-func getWorkflows(stmt *parser.BlockStatement) []Workflow {
-	workflowVisitor := NewWorkflowVisitor()
-	workflowVisitor.VisitBlockStatement(stmt)
-	return workflowVisitor.workflows
 }
 
 func ConvertToStarlarkModule(m *Module) *StarlarkModule {

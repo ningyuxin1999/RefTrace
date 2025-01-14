@@ -1,6 +1,7 @@
 package nf
 
 import (
+	pb "reft-go/nf/proto"
 	"reft-go/parser"
 	"sort"
 )
@@ -10,6 +11,13 @@ var _ parser.GroovyCodeVisitor = (*ParamVisitor)(nil)
 type ParamInfo struct {
 	Name       string
 	LineNumber int
+}
+
+func (p *ParamInfo) ToProto() *pb.Param {
+	return &pb.Param{
+		Line: int32(p.LineNumber),
+		Name: p.Name,
+	}
 }
 
 type ParamVisitor struct {

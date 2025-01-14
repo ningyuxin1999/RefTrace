@@ -267,6 +267,8 @@ message Module {
   int32 dsl_version = 2;
   repeated Process processes = 3;
   repeated IncludeStatement includes = 4;
+  repeated Param params = 5;
+  repeated Workflow workflows = 6;
 }
 
 // Process represents a Nextflow process
@@ -284,4 +286,15 @@ message IncludedItem {
 message IncludeStatement {
     int32 line = 1;
     repeated IncludedItem items = 2;
+}
+
+message Param {
+    int32 line = 1;
+    string name = 2;
+}
+
+message Workflow {
+    string name = 1;
+    repeated string takes = 2;
+    repeated string emits = 3;
 }

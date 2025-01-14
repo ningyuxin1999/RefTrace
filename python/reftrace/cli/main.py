@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import List, Callable
 from importlib.metadata import version
 import pkgutil
+import json
 
 from reftrace import Module, ConfigFile, parse_modules
 from reftrace.linting import LintError, LintWarning, LintResults, rule, configrule
@@ -370,6 +371,47 @@ def lint(rules_file: str, directory: str, debug: bool, quiet: bool):
 
     if has_errors:
         sys.exit(1)
+
+@cli.command()
+@click.option('--directory', '-d', 
+              type=click.Path(exists=True),
+              default='.',
+              help="Directory containing .nf files (default: current directory)")
+@click.option('--pretty/--compact', default=True,
+              help="Pretty print the JSON output (default: pretty)")
+def info(directory: str, pretty: bool):
+    """Display detailed information about Nextflow modules in JSON format."""
+    modules_info = []
+    
+    with click.progressbar(length=0, label='Parsing Nextflow files', 
+                         show_pos=True, 
+                         show_percent=True,
+                         show_eta=False,
+                         width=40) as bar:
+        def progress_callback(current: int, total: int):
+            if bar.length == 0:
+                bar.length = total
+            bar.update(current - bar.pos)
+                
+        module_results = parse_modules(directory, progress_callback)
+
+        for module_result in module_results:
+            if module_result.error:
+                if module_result.error.likely_rt_bug:
+                    click.secho(f"\nInternal error parsing {module_result.filepath}:", fg="red", err=True)
+                    click.secho(f"  {module_result.error.error}", fg="red", err=True)
+                    click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
+                    sys.exit(1)
+                else:
+                    click.secho(f"\nFailed to parse {module_result.filepath}:", fg="red")
+                    click.secho(f"  {module_result.error.error}", fg="red")
+                    continue
+
+            modules_info.append(module_result.module.to_dict())
+
+    # Print JSON output
+    indent = 2 if pretty else None
+    click.echo(json.dumps(modules_info, indent=indent))
 
 if __name__ == "__main__":
     cli()
