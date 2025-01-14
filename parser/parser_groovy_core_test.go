@@ -77,7 +77,7 @@ func TestCommand03x(t *testing.T) {
 }
 
 func TestGstring02(t *testing.T) {
-	filePath := filepath.Join("testdata", "groovy_core", "Gstring_02x.groovy")
+	filePath := filepath.Join("testdata", "groovy_core", "GString_02x.groovy")
 	testGroovyFile(t, filePath)
 }
 

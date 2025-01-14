@@ -13,6 +13,7 @@ type BaseVisitor struct {
 	VisitClosureExpressionHook    func(expr *parser.ClosureExpression)
 	VisitPropertyExpressionHook   func(expr *parser.PropertyExpression)
 	VisitExpressionHook           func(expr parser.Expression)
+	VisitBlockStatementHook       func(block *parser.BlockStatement)
 }
 
 // NewBaseVisitor creates a new BaseVisitor
@@ -22,6 +23,10 @@ func NewBaseVisitor() *BaseVisitor {
 
 // Statements
 func (v *BaseVisitor) VisitBlockStatement(block *parser.BlockStatement) {
+	if v.VisitBlockStatementHook != nil {
+		v.VisitBlockStatementHook(block)
+		return
+	}
 	for _, statement := range block.GetStatements() {
 		v.VisitStatement(statement)
 	}
@@ -242,6 +247,14 @@ func (v *BaseVisitor) VisitVariableExpression(expression *parser.VariableExpress
 
 func (v *BaseVisitor) VisitDeclarationExpression(expression *parser.DeclarationExpression) {
 	v.VisitBinaryExpression(expression.BinaryExpression)
+}
+
+func convertToExpressionSlice(constExprs []*parser.ConstantExpression) []parser.Expression {
+	exprs := make([]parser.Expression, len(constExprs))
+	for i, ce := range constExprs {
+		exprs[i] = ce
+	}
+	return exprs
 }
 
 func (v *BaseVisitor) VisitGStringExpression(expression *parser.GStringExpression) {

@@ -73,6 +73,12 @@ func BuildModule(filePath string) (*Module, error) {
 	}, nil
 }
 
+func getWorkflows(stmt *parser.BlockStatement) []Workflow {
+	workflowVisitor := NewWorkflowVisitor()
+	workflowVisitor.VisitBlockStatement(stmt)
+	return workflowVisitor.workflows
+}
+
 func ConvertToStarlarkModule(m *Module) *StarlarkModule {
 	starlarkProcesses := make([]*StarlarkProcess, len(m.Processes))
 	for i, process := range m.Processes {
