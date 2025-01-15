@@ -114,8 +114,9 @@ func (is *IncludeStatement) ToProto() *pb.IncludeStatement {
 		items[i] = item.ToProto()
 	}
 	return &pb.IncludeStatement{
-		Line:  int32(is.LineNumber),
-		Items: items,
+		FromModule: is.ModulePath,
+		Line:       int32(is.LineNumber),
+		Items:      items,
 	}
 }
 

@@ -50,18 +50,16 @@ func TestSarekEntireMain(t *testing.T) {
 
 func TestSimpleWorkflow(t *testing.T) {
 	filePath := filepath.Join(getTestDataDir(), "nf-testdata", "simple_workflow.nf")
-	ast, err := parser.BuildAST(filePath)
+
+	module, err, _ := BuildModule(filePath)
 	if err != nil {
-		t.Fatalf("Failed to build AST: %v", err)
+		t.Fatalf("Failed to build module: %v", err)
 	}
 
-	workflowVisitor := NewWorkflowVisitor()
-	workflowVisitor.VisitBlockStatement(ast.StatementBlock)
-	workflows := workflowVisitor.workflows
-	if len(workflows) != 2 {
-		t.Fatalf("Expected 2 workflows, got %d", len(workflows))
+	if len(module.Workflows) != 2 {
+		t.Fatalf("Expected 2 workflows, got %d", len(module.Workflows))
 	}
-	workflow := workflows[0]
+	workflow := module.Workflows[0]
 	if len(workflow.Takes) != 2 {
 		t.Fatalf("Expected 2 takes, got %d", len(workflow.Takes))
 	}

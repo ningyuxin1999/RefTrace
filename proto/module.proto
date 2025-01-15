@@ -286,6 +286,7 @@ message IncludedItem {
 message IncludeStatement {
     int32 line = 1;
     repeated IncludedItem items = 2;
+    string from_module = 3;
 }
 
 message Param {

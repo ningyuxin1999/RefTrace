@@ -69,6 +69,11 @@ class IncludeStatement:
         """The items included in this include statement."""
         return [IncludedItem(_proto=i) for i in self._proto.items]
 
+    @property
+    def from_module(self) -> str:
+        """The module path that this include statement is from."""
+        return self._proto.from_module
+
 @dataclass
 class Module:
     """Represents a Nextflow module that contains process definitions."""
@@ -134,6 +139,7 @@ class Module:
             "includes": [
                 {
                     "line": inc.line,
+                    "from_module": inc.from_module,
                     "items": [
                         {"name": item.name, "alias": item.alias}
                         for item in inc.items
