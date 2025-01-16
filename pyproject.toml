@@ -14,7 +14,9 @@ authors = [
 ]
 dependencies = [
     "click>=8.0.0",
-    "protobuf>=5.29.2"
+    "matplotlib>=3.9.4",
+    "networkx>=3.2.1",
+    "protobuf>=5.29.2",
 ]
 
 [tool.setuptools_scm]

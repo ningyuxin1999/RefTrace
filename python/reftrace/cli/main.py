@@ -7,9 +7,10 @@ from typing import List, Callable
 from importlib.metadata import version
 import pkgutil
 import json
-
 from reftrace import Module, ConfigFile, parse_modules
 from reftrace.linting import LintError, LintWarning, LintResults, rule, configrule
+import networkx as nx
+import matplotlib.pyplot as plt
 
 def load_rules(rules_file: str = "rules.py") -> tuple[List[Callable], List[Callable]]:
     """Load rules from rules.py using the decorators"""
@@ -422,6 +423,113 @@ def info(directory: str, pretty: bool):
     # Print JSON output
     indent = 2 if pretty else None
     click.echo(json.dumps(ret, indent=indent))
+
+
+@cli.command()
+@click.option('--directory', '-d', 
+              type=click.Path(exists=True),
+              default='.',
+              help="Directory containing .nf files (default: current directory)")
+@click.option('--inline', is_flag=True, default=False,
+              help="Display graph inline in terminal (requires terminal with Kitty image protocol support)")
+def graph(directory: str, inline: bool):
+    """Generate a dependency graph for the pipeline."""
+    modules: List[Module] = []
+    
+    with click.progressbar(length=0, label='Parsing Nextflow files', 
+                         show_pos=True, 
+                         show_percent=True,
+                         show_eta=False,
+                         width=40,
+                         file=sys.stderr) as bar:
+        def progress_callback(current: int, total: int):
+            if bar.length == 0:
+                bar.length = total
+            bar.update(current - bar.pos)
+                
+        module_list_result = parse_modules(directory, progress_callback)
+        module_results = module_list_result.results
+
+        has_errors = False
+
+        for module_result in module_results:
+            if module_result.error:
+                if module_result.error.likely_rt_bug:
+                    click.secho(f"\nInternal error parsing {module_result.filepath}:", fg="red", err=True)
+                    click.secho(f"  {module_result.error.error}", fg="red", err=True)
+                    click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
+                    sys.exit(1)
+                else:
+                    click.secho(f"\nFailed to parse {module_result.filepath}:", fg="red")
+                    click.secho(f"  {module_result.error.error}", fg="red")
+                    has_errors = True
+                    continue
+            else:
+                modules.append(module_result.module)
+        if has_errors:
+            click.echo("Please fix parsing errors before generating a graph.")
+            sys.exit(1)
+
+    module_names = [m.path for m in modules]
+    resolved_includes = module_list_result.resolved_includes
+
+    def simplify_path(path):
+        """Extract meaningful name from path"""
+        parts = path.split('/')
+        if len(parts) < 2:
+            # If there's no parent folder, just return the filename without extension
+            return parts[0].replace('.nf', '')
+        # Return the parent folder and filename without extension
+        return f"{parts[-2]}/{parts[-1].replace('.nf', '')}"
+
+    G = nx.DiGraph()
+    labels = {path: simplify_path(path) for path in module_names}
+    G.add_nodes_from(module_names)
+
+    for include in resolved_includes:
+        for module in include.includes:
+            G.add_edge(include.module_path, module)
+
+        # Color nodes based on module type
+    node_colors = ['#ADD8E6' if 'nf-core' in node else '#90EE90' for node in G.nodes()]
+
+    # Draw the graph
+    plt.figure(figsize=(20, 15))  # Increased figure size
+    
+    # Use a different layout algorithm with adjusted parameters
+    pos = nx.spring_layout(G, k=2, iterations=50)  # k=2 increases spacing between nodes
+    
+    # Draw nodes
+    nx.draw_networkx_nodes(G, pos, 
+                          node_color=node_colors,
+                          node_size=3000)
+    
+    # Draw edges
+    nx.draw_networkx_edges(G, pos, 
+                          edge_color="gray",
+                          arrows=True,
+                          arrowsize=20)
+    
+    # Draw labels
+    nx.draw_networkx_labels(G, pos,
+                           labels=labels,
+                           font_size=8)
+    
+    plt.title("Module Dependencies", pad=20, size=16)
+    
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor='#ADD8E6', label='nf-core modules'),
+        Patch(facecolor='#90EE90', label='local modules')
+    ]
+    plt.legend(handles=legend_elements, loc='upper right')
+    
+    plt.tight_layout()
+    plt.savefig("graph.png", dpi=300, bbox_inches='tight')
+    click.echo("Graph saved to graph.png")
+    plt.close()
+
 
 if __name__ == "__main__":
     cli()
