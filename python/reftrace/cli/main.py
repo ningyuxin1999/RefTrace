@@ -473,6 +473,40 @@ def graph(directory: str, inline: bool):
     module_names = [m.path for m in modules]
     resolved_includes = module_list_result.resolved_includes
 
+    def split_into_lines(text: str, max_length: int = 20) -> str:
+        """Split text into multiple lines, each no longer than max_length characters.
+        Attempts to split on word boundaries (/ or _) when possible."""
+        if len(text) <= max_length:
+            return text
+            
+        # First try splitting on slashes
+        if '/' in text:
+            parts = text.split('/')
+            return '\n'.join(parts)
+            
+        words = text.replace('_', ' ').split()
+        lines = []
+        current_line = []
+        current_length = 0
+        
+        for word in words:
+            # +1 for the space we'll add between words
+            word_length = len(word) + (1 if current_line else 0)
+            
+            if current_length + word_length <= max_length:
+                current_line.append(word)
+                current_length += word_length
+            else:
+                if current_line:
+                    lines.append('_'.join(current_line))
+                current_line = [word]
+                current_length = len(word)
+                
+        if current_line:
+            lines.append('_'.join(current_line))
+            
+        return '\n'.join(lines)
+
     def simplify_path(path):
         """Extract meaningful name from path"""
         parts = path.split('/')
@@ -480,7 +514,9 @@ def graph(directory: str, inline: bool):
             # If there's no parent folder, just return the filename without extension
             return parts[0].replace('.nf', '')
         # Return the parent folder and filename without extension
-        return f"{parts[-2]}/{parts[-1].replace('.nf', '')}"
+        simplified = f"{parts[-2]}/{parts[-1].replace('.nf', '')}"
+        simplified = simplified.replace('/main', '')
+        return split_into_lines(simplified)
 
     G = nx.DiGraph()
     labels = {path: simplify_path(path) for path in module_names}
@@ -577,7 +613,11 @@ def graph(directory: str, inline: bool):
     edge_colors = [node_color_map[edge[0]] for edge in G.edges()]
 
     # Draw the graph
-    plt.figure(figsize=(15, 15))
+    plt.style.use('dark_background')
+    fig = plt.figure(figsize=(15, 15))
+    ax = fig.add_subplot(111)
+    ax.set_facecolor('#1a1a1a')  # Dark gray background
+    fig.set_facecolor('#1a1a1a')
     
     # Draw edges first (so they're behind nodes)
     nx.draw_networkx_edges(G, pos, 
@@ -593,12 +633,17 @@ def graph(directory: str, inline: bool):
                           node_color=node_colors,
                           node_size=3000)
     
-    # Draw labels
+    # Draw labels with white text and black background box
     nx.draw_networkx_labels(G, pos,
                            labels=labels,
-                           font_size=8)
+                           font_size=8,
+                           font_color='white',
+                           bbox=dict(facecolor='black', 
+                                   edgecolor='none',
+                                   alpha=0.7,
+                                   pad=2))
     
-    plt.title("Module Dependencies", pad=20, size=16)
+    plt.title("Module Dependencies", pad=30, size=16, color="white")
     
     # Remove legend since each node is unique
     # plt.legend(handles=legend_elements, loc='upper right')
@@ -607,7 +652,11 @@ def graph(directory: str, inline: bool):
     plt.axis('off')
     
     plt.tight_layout()
-    plt.savefig("graph.png", dpi=300, bbox_inches='tight')
+    plt.savefig("graph.png", 
+                dpi=300, 
+                bbox_inches='tight',
+                facecolor='#1a1a1a',  # Ensure dark background is saved
+                edgecolor='none')
     click.echo("Graph saved to graph.png")
     plt.close()
 
