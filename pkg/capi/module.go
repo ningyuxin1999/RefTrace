@@ -90,8 +90,9 @@ func ProcessDirectory(dir string, callback ProgressCallback) ([]ModuleResult, er
 				mu.Lock()
 				results = append(results, ModuleResult{
 					Module: module,
-					Error:  err,
-					Path:   path,
+					// TODO: add likely rt bug
+					Error: err,
+					Path:  path,
 				})
 				processedFiles++
 				if callback != nil {
@@ -136,6 +137,8 @@ func Parse_Modules(dir *C.char, callback unsafe.Pointer) *C.char {
 		return C.CString(fmt.Sprintf("error processing directory: %v", err))
 	}
 
+	var modules []*nf.Module
+
 	for _, res := range results {
 		moduleResult := &pb.ModuleResult{
 			FilePath: res.Path,
@@ -149,12 +152,21 @@ func Parse_Modules(dir *C.char, callback unsafe.Pointer) *C.char {
 				},
 			}
 		} else {
+			modules = append(modules, res.Module)
 			moduleResult.Result = &pb.ModuleResult_Module{
 				Module: res.Module.ToProto(),
 			}
 		}
 
 		listResult.Results = append(listResult.Results, moduleResult)
+	}
+
+	resolvedIncludes, unresolvedIncludes := nf.ResolveIncludes(modules)
+	for _, resolved := range resolvedIncludes {
+		listResult.ResolvedIncludes = append(listResult.ResolvedIncludes, resolved.ToProto())
+	}
+	for _, unresolved := range unresolvedIncludes {
+		listResult.UnresolvedIncludes = append(listResult.UnresolvedIncludes, unresolved.ToProto())
 	}
 
 	bytes, err := proto.Marshal(listResult)

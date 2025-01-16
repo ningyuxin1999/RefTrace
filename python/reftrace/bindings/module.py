@@ -9,6 +9,42 @@ from .process import Process
 import json
 
 @dataclass
+class ResolvedInclude:
+    _proto: module_pb2.ResolvedInclude
+
+    @property
+    def module_path(self) -> str:
+        return self._proto.module_path
+
+    @property
+    def includes(self) -> List[str]:
+        return list(self._proto.includes)
+
+    def to_dict(self) -> dict:
+        return {
+            "module_path": self.module_path,
+            "includes": self.includes
+        }
+
+@dataclass
+class UnresolvedInclude:
+    _proto: module_pb2.UnresolvedInclude
+
+    @property
+    def module_path(self) -> str:
+        return self._proto.module_path
+
+    @property
+    def includes(self) -> List[str]:
+        return list(self._proto.includes)
+
+    def to_dict(self) -> dict:
+        return {
+            "module_path": self.module_path,
+            "includes": self.includes
+        }
+
+@dataclass
 class Workflow:
     _proto: module_pb2.Workflow
 
@@ -184,8 +220,14 @@ class ModuleResult:
     filepath: str
     module: Optional[Module]
     error: Optional[ParseError]
+
+@dataclass
+class ModuleListResult:
+    results: List[ModuleResult]
+    resolved_includes: List[ResolvedInclude]
+    unresolved_includes: List[UnresolvedInclude]
        
-def parse_modules(directory, progress_callback=None) -> List[ModuleResult]:
+def parse_modules(directory, progress_callback=None) -> ModuleListResult:
     """
     Parse all Nextflow modules in a directory.
     
@@ -194,7 +236,7 @@ def parse_modules(directory, progress_callback=None) -> List[ModuleResult]:
         progress_callback (callable): Optional callback function(current, total)
     
     Returns:
-        List[ModuleResult]: List of results, each containing either a Module or ParseError
+        ModuleListResult: List of results, each containing either a Module or ParseError
     """
     if progress_callback is None:
         callback_ptr = None
@@ -238,6 +280,10 @@ def parse_modules(directory, progress_callback=None) -> List[ModuleResult]:
                     )
                 ))
         
-        return results
+        return ModuleListResult(
+            results=results,
+            resolved_includes=[ResolvedInclude(_proto=i) for i in proto_result.resolved_includes],
+            unresolved_includes=[UnresolvedInclude(_proto=i) for i in proto_result.unresolved_includes]
+        )
     finally:
         _lib.Module_Free(result_ptr)

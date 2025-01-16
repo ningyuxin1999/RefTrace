@@ -127,7 +127,7 @@ def test_parse_modules():
             progress_calls.append((current, total))
             
         # Process the modules
-        results: List[ModuleResult] = parse_modules(tmpdir, progress_callback)
+        results = parse_modules(tmpdir, progress_callback).results
         
         # Verify progress tracking
         assert len(progress_calls) == 2  # Should be called twice

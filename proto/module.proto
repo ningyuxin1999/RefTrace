@@ -256,9 +256,21 @@ message ModuleResult {
     }
 }
 
+message UnresolvedInclude {
+    string module_path = 1;
+    repeated string includes = 2;
+}
+
+message ResolvedInclude {
+    string module_path = 1;
+    repeated string includes = 2;
+}
+
 // ModuleListResult represents the result of parsing multiple Nextflow module files
 message ModuleListResult {
     repeated ModuleResult results = 1;
+    repeated ResolvedInclude resolved_includes = 2;
+    repeated UnresolvedInclude unresolved_includes = 3;
 }
 
 // Module represents a Nextflow module file

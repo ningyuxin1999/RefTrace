@@ -387,13 +387,17 @@ def info(directory: str, pretty: bool):
                          show_pos=True, 
                          show_percent=True,
                          show_eta=False,
-                         width=40) as bar:
+                         width=40,
+                         file=sys.stderr) as bar:
         def progress_callback(current: int, total: int):
             if bar.length == 0:
                 bar.length = total
             bar.update(current - bar.pos)
                 
-        module_results = parse_modules(directory, progress_callback)
+        module_list_result = parse_modules(directory, progress_callback)
+        module_results = module_list_result.results
+        resolved_includes = module_list_result.resolved_includes
+        unresolved_includes = module_list_result.unresolved_includes
 
         for module_result in module_results:
             if module_result.error:
@@ -409,9 +413,15 @@ def info(directory: str, pretty: bool):
 
             modules_info.append(module_result.module.to_dict())
 
+    ret = {
+        "modules": modules_info,
+        "resolved_includes": [i.to_dict() for i in resolved_includes],
+        "unresolved_includes": [i.to_dict() for i in unresolved_includes]
+    }
+
     # Print JSON output
     indent = 2 if pretty else None
-    click.echo(json.dumps(modules_info, indent=indent))
+    click.echo(json.dumps(ret, indent=indent))
 
 if __name__ == "__main__":
     cli()
