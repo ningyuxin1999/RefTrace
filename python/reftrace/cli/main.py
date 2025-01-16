@@ -490,9 +490,6 @@ def graph(directory: str, inline: bool):
         for module in include.includes:
             G.add_edge(include.module_path, module)
 
-        # Color nodes based on module type
-    node_colors = ['#ADD8E6' if 'nf-core' in node else '#90EE90' for node in G.nodes()]
-
     def hierarchical_layout(G, root=None, max_nodes_per_row=10):
         """Create a hierarchical layout using networkx"""
         # If no root specified, find node with no incoming edges (no dependencies)
@@ -541,36 +538,70 @@ def graph(directory: str, inline: bool):
         
         return pos
 
-    # Use our custom hierarchical layout with max 10 nodes per row
+    # First get the layout positions
     pos = hierarchical_layout(G, max_nodes_per_row=10)
+
+    # Import color utilities
+    from matplotlib.colors import rgb2hex
+
+    def generate_distinct_colors(n):
+        """Generate n visually distinct colors using HSV color space"""
+        colors = []
+        for i in range(n):
+            # Use golden ratio to maximize difference between hues
+            hue = i * 0.618033988749895
+            hue = hue - int(hue)
+            # Vary saturation and value for more distinction
+            saturation = 0.6 + (i % 3) * 0.2  # Varies between 0.6, 0.8, and 1.0
+            value = 0.8 + (i % 2) * 0.2       # Varies between 0.8 and 1.0
+            
+            # Convert HSV to RGB
+            import colorsys
+            rgb = colorsys.hsv_to_rgb(hue, saturation, value)
+            # Convert to hex
+            color = rgb2hex(rgb)
+            colors.append(color)
+        return colors
+
+    # Generate distinct colors for all nodes instead of just top-level modules
+    num_colors = len(G.nodes())
+    # color_palette = sns.color_palette("husl", num_colors)  # Generate distinct colors for all nodes
+    # node_color_map = {node: rgb2hex(color) for node, color in zip(G.nodes(), color_palette)}
+    colors = generate_distinct_colors(num_colors)
+    node_color_map = {node: color for node, color in zip(G.nodes(), colors)}
     
-    # Adjust figure size to be square
-    plt.figure(figsize=(15, 15))  # Changed to square format
-    
+    # Create node colors list in the same order as nodes
+    node_colors = [node_color_map[node] for node in G.nodes()]
+
+    # Create edge colors based on source node
+    edge_colors = [node_color_map[edge[0]] for edge in G.edges()]
+
     # Draw the graph
+    plt.figure(figsize=(15, 15))
+    
+    # Draw edges first (so they're behind nodes)
+    nx.draw_networkx_edges(G, pos, 
+                          edge_color=edge_colors,
+                          arrows=True,
+                          arrowsize=10,
+                          min_target_margin=25,
+                          connectionstyle="arc3,rad=0.2",
+                          alpha=0.7)  # Added some transparency
+    
+    # Draw nodes
     nx.draw_networkx_nodes(G, pos, 
                           node_color=node_colors,
                           node_size=3000)
     
-    nx.draw_networkx_edges(G, pos, 
-                          edge_color="gray",
-                          arrows=True,
-                          arrowsize=20,
-                          connectionstyle="arc3,rad=0.2")  # Add curve to edges
-    
+    # Draw labels
     nx.draw_networkx_labels(G, pos,
                            labels=labels,
                            font_size=8)
     
     plt.title("Module Dependencies", pad=20, size=16)
     
-    # Add legend
-    from matplotlib.patches import Patch
-    legend_elements = [
-        Patch(facecolor='#ADD8E6', label='nf-core modules'),
-        Patch(facecolor='#90EE90', label='local modules')
-    ]
-    plt.legend(handles=legend_elements, loc='upper right')
+    # Remove legend since each node is unique
+    # plt.legend(handles=legend_elements, loc='upper right')
     
     # Remove axes
     plt.axis('off')
