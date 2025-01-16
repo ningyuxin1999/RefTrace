@@ -612,6 +612,17 @@ def graph(directory: str, inline: bool):
     # Create edge colors based on source node
     edge_colors = [node_color_map[edge[0]] for edge in G.edges()]
 
+    current_dir = os.path.basename(os.path.abspath(directory))
+
+    # Get git commit hash (short version)
+    try:
+        import subprocess
+        git_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], 
+                                        cwd=directory,
+                                        stderr=subprocess.DEVNULL).decode().strip()
+    except:
+        git_hash = "unknown"
+
     # Draw the graph
     plt.style.use('dark_background')
     fig = plt.figure(figsize=(15, 15))
@@ -643,10 +654,25 @@ def graph(directory: str, inline: bool):
                                    alpha=0.7,
                                    pad=2))
     
-    plt.title("Module Dependencies", pad=30, size=16, color="white")
-    
+    # plt.title(f"{current_dir} module dependencies", pad=100, size=16, color="white")
+
     # Remove legend since each node is unique
     # plt.legend(handles=legend_elements, loc='upper right')
+
+    # Add title with directory name and commit hash
+    plt.figtext(0.5, 0.90,
+                f"{current_dir}", 
+                ha='center',
+                color='white',
+                size=20)
+    
+    # Add subtitle below the title
+    plt.figtext(0.5, 0.86,
+                f"commit {git_hash}\ngenerated with RefTrace",
+                ha='center',
+                color='white',
+                alpha=0.7,
+                fontsize=12)
     
     # Remove axes
     plt.axis('off')
