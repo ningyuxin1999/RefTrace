@@ -493,24 +493,71 @@ def graph(directory: str, inline: bool):
         # Color nodes based on module type
     node_colors = ['#ADD8E6' if 'nf-core' in node else '#90EE90' for node in G.nodes()]
 
+    def hierarchical_layout(G, root=None, max_nodes_per_row=10):
+        """Create a hierarchical layout using networkx"""
+        # If no root specified, find node with no incoming edges (no dependencies)
+        if root is None:
+            root = [n for n, d in G.in_degree() if d == 0][0]
+        
+        # Get all layers using BFS
+        layers = []
+        nodes_seen = set()
+        current_layer = {root}
+        
+        while current_layer:
+            layers.append(list(current_layer))
+            nodes_seen.update(current_layer)
+            # Get all neighbors of the current layer that haven't been seen
+            next_layer = set()
+            for node in current_layer:
+                next_layer.update(n for n in G.neighbors(node) if n not in nodes_seen)
+            current_layer = next_layer
+        
+        # Split large layers into sub-layers
+        split_layers = []
+        for layer in layers:
+            if len(layer) > max_nodes_per_row:
+                # Split into multiple rows
+                num_rows = (len(layer) + max_nodes_per_row - 1) // max_nodes_per_row
+                for i in range(num_rows):
+                    start_idx = i * max_nodes_per_row
+                    end_idx = start_idx + max_nodes_per_row
+                    split_layers.append(layer[start_idx:end_idx])
+            else:
+                split_layers.append(layer)
+        
+        # Find the widest layer to scale horizontal spacing
+        max_layer_width = max(len(layer) for layer in split_layers)
+        
+        # Position nodes by layer
+        pos = {}
+        for y, layer in enumerate(split_layers):
+            # Calculate x position for each node in the layer
+            for x, node in enumerate(layer):
+                # Center each layer and scale x positions based on max width
+                x_pos = (x - len(layer)/2) * (3 * max_layer_width / len(layer))
+                y_pos = -y * 2  # Multiply by 2 for less vertical space
+                pos[node] = (x_pos, y_pos)
+        
+        return pos
+
+    # Use our custom hierarchical layout with max 10 nodes per row
+    pos = hierarchical_layout(G, max_nodes_per_row=10)
+    
+    # Adjust figure size to be square
+    plt.figure(figsize=(15, 15))  # Changed to square format
+    
     # Draw the graph
-    plt.figure(figsize=(20, 15))  # Increased figure size
-    
-    # Use a different layout algorithm with adjusted parameters
-    pos = nx.spring_layout(G, k=2, iterations=50)  # k=2 increases spacing between nodes
-    
-    # Draw nodes
     nx.draw_networkx_nodes(G, pos, 
                           node_color=node_colors,
                           node_size=3000)
     
-    # Draw edges
     nx.draw_networkx_edges(G, pos, 
                           edge_color="gray",
                           arrows=True,
-                          arrowsize=20)
+                          arrowsize=20,
+                          connectionstyle="arc3,rad=0.2")  # Add curve to edges
     
-    # Draw labels
     nx.draw_networkx_labels(G, pos,
                            labels=labels,
                            font_size=8)
@@ -524,6 +571,9 @@ def graph(directory: str, inline: bool):
         Patch(facecolor='#90EE90', label='local modules')
     ]
     plt.legend(handles=legend_elements, loc='upper right')
+    
+    # Remove axes
+    plt.axis('off')
     
     plt.tight_layout()
     plt.savefig("graph.png", dpi=300, bbox_inches='tight')
