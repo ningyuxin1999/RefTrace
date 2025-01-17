@@ -60,11 +60,6 @@ func canonicalize(modulePath, includePath string) string {
 		return abs + ".nf"
 	}
 
-	// Special case for workflows directory - just append .nf
-	if filepath.Base(filepath.Dir(abs)) == "workflows" {
-		return abs + ".nf"
-	}
-
 	// Otherwise append "/main.nf"
 	return abs + "/main.nf"
 }

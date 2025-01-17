@@ -522,6 +522,23 @@ def graph(directory: str, inline: bool):
     labels = {path: simplify_path(path) for path in module_names}
     G.add_nodes_from(module_names)
 
+    # Calculate node size based on number of nodes
+    num_nodes = len(G.nodes())
+    if num_nodes > 50:
+        node_size = 2000
+    elif num_nodes > 30:
+        node_size = 2500
+    else:
+        node_size = 3000
+
+    # Adjust font size based on number of nodes
+    if num_nodes > 50:
+        font_size = 6
+    elif num_nodes > 30:
+        font_size = 7
+    else:
+        font_size = 8
+
     for include in resolved_includes:
         for module in include.includes:
             G.add_edge(include.module_path, module)
@@ -642,12 +659,12 @@ def graph(directory: str, inline: bool):
     # Draw nodes
     nx.draw_networkx_nodes(G, pos, 
                           node_color=node_colors,
-                          node_size=3000)
+                          node_size=node_size)
     
     # Draw labels with white text and black background box
     nx.draw_networkx_labels(G, pos,
                            labels=labels,
-                           font_size=8,
+                           font_size=font_size,
                            font_color='white',
                            bbox=dict(facecolor='black', 
                                    edgecolor='none',
@@ -660,14 +677,14 @@ def graph(directory: str, inline: bool):
     # plt.legend(handles=legend_elements, loc='upper right')
 
     # Add title with directory name and commit hash
-    plt.figtext(0.5, 0.90,
+    plt.figtext(0.5, 0.95,
                 f"{current_dir}", 
                 ha='center',
                 color='white',
                 size=20)
     
     # Add subtitle below the title
-    plt.figtext(0.5, 0.86,
+    plt.figtext(0.5, 0.91,
                 f"commit {git_hash}\ngenerated with RefTrace",
                 ha='center',
                 color='white',
