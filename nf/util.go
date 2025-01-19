@@ -47,7 +47,7 @@ func makeAbs(modulePath, includePath string) string {
 	return filepath.Clean(filepath.Join(moduleDir, includePath))
 }
 
-func canonicalize(modulePath, includePath string) string {
+func canonicalize(modules []*Module, modulePath, includePath string) string {
 	abs := makeAbs(modulePath, includePath)
 
 	// If path ends with .nf, return as is
@@ -58,6 +58,14 @@ func canonicalize(modulePath, includePath string) string {
 	// If path ends with "main", append ".nf"
 	if strings.HasSuffix(abs, "main") {
 		return abs + ".nf"
+	}
+
+	// Check if abs + ".nf" exists in modules
+	directPath := abs + ".nf"
+	for _, module := range modules {
+		if module.Path == directPath {
+			return directPath
+		}
 	}
 
 	// Otherwise append "/main.nf"
@@ -75,7 +83,7 @@ func ResolveIncludes(modules []*Module) ([]*ResolvedInclude, []*UnresolvedInclud
 		resolvedSet := make(map[string]struct{})
 		unresolvedSet := make(map[string]struct{})
 		for _, include := range module.Includes {
-			canonicalPath := canonicalize(module.Path, include.ModulePath)
+			canonicalPath := canonicalize(modules, module.Path, include.ModulePath)
 			if _, ok := moduleNames[canonicalPath]; ok {
 				resolvedSet[canonicalPath] = struct{}{}
 			} else {

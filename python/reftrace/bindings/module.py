@@ -167,8 +167,12 @@ class Module:
         """All workflows defined in this module."""
         return [Workflow(_proto=w) for w in self._proto.workflows]
     
-    def to_dict(self) -> dict:
+    def to_dict(self, only_paths: bool = False) -> dict:
         """Convert the module to a dictionary representation."""
+        if only_paths:
+            return {
+                "path": self.path,
+            }
         return {
             "path": self.path,
             "dsl_version": self.dsl_version,

@@ -373,14 +373,15 @@ def lint(rules_file: str, directory: str, debug: bool, quiet: bool):
     if has_errors:
         sys.exit(1)
 
-@cli.command()
+@cli.command(name="json")
 @click.option('--directory', '-d', 
               type=click.Path(exists=True),
               default='.',
               help="Directory containing .nf files (default: current directory)")
 @click.option('--pretty/--compact', default=True,
               help="Pretty print the JSON output (default: pretty)")
-def info(directory: str, pretty: bool):
+@click.option('--only-paths', is_flag=True, default=False, help="Only show the module path for each module")
+def show_json(directory: str, pretty: bool, only_paths: bool):
     """Display detailed information about Nextflow modules in JSON format."""
     modules_info = []
     
@@ -412,7 +413,10 @@ def info(directory: str, pretty: bool):
                     click.secho(f"  {module_result.error.error}", fg="red")
                     continue
 
-            modules_info.append(module_result.module.to_dict())
+            modules_info.append(module_result.module.to_dict(only_paths=only_paths))
+    
+    # Sort modules by path
+    modules_info.sort(key=lambda x: x['path'])
 
     ret = {
         "modules": modules_info,
@@ -545,49 +549,69 @@ def graph(directory: str, inline: bool):
 
     def hierarchical_layout(G, root=None, max_nodes_per_row=10):
         """Create a hierarchical layout using networkx"""
-        # If no root specified, find node with no incoming edges (no dependencies)
-        if root is None:
-            root = [n for n, d in G.in_degree() if d == 0][0]
-        
-        # Get all layers using BFS
-        layers = []
-        nodes_seen = set()
-        current_layer = {root}
-        
-        while current_layer:
-            layers.append(list(current_layer))
-            nodes_seen.update(current_layer)
-            # Get all neighbors of the current layer that haven't been seen
-            next_layer = set()
-            for node in current_layer:
-                next_layer.update(n for n in G.neighbors(node) if n not in nodes_seen)
-            current_layer = next_layer
-        
-        # Split large layers into sub-layers
-        split_layers = []
-        for layer in layers:
-            if len(layer) > max_nodes_per_row:
-                # Split into multiple rows
-                num_rows = (len(layer) + max_nodes_per_row - 1) // max_nodes_per_row
-                for i in range(num_rows):
-                    start_idx = i * max_nodes_per_row
-                    end_idx = start_idx + max_nodes_per_row
-                    split_layers.append(layer[start_idx:end_idx])
-            else:
-                split_layers.append(layer)
-        
-        # Find the widest layer to scale horizontal spacing
-        max_layer_width = max(len(layer) for layer in split_layers)
-        
-        # Position nodes by layer
         pos = {}
-        for y, layer in enumerate(split_layers):
-            # Calculate x position for each node in the layer
-            for x, node in enumerate(layer):
-                # Center each layer and scale x positions based on max width
-                x_pos = (x - len(layer)/2) * (3 * max_layer_width / len(layer))
-                y_pos = -y * 2  # Multiply by 2 for less vertical space
-                pos[node] = (x_pos, y_pos)
+        
+        # Find all connected components
+        components = list(nx.weakly_connected_components(G))
+        
+        # Process each component separately
+        y_offset = 0
+        for component in components:
+            # Create subgraph for this component
+            subG = G.subgraph(component)
+            
+            # If no root specified for this component, find node with minimum in-degree
+            if root is None or root not in component:
+                component_root = min(component, key=lambda n: G.in_degree(n))
+            else:
+                component_root = root
+            
+            # Get all layers using BFS for this component
+            layers = []
+            nodes_seen = set()
+            current_layer = {component_root}
+            
+            while current_layer:
+                layers.append(list(current_layer))
+                nodes_seen.update(current_layer)
+                # Get all neighbors of the current layer that haven't been seen
+                next_layer = set()
+                for node in current_layer:
+                    next_layer.update(n for n in subG.neighbors(node) if n not in nodes_seen)
+                current_layer = next_layer
+            
+            # Add any remaining nodes that weren't reached by BFS
+            remaining = component - nodes_seen
+            if remaining:
+                layers.append(list(remaining))
+            
+            # Split large layers into sub-layers
+            split_layers = []
+            for layer in layers:
+                if len(layer) > max_nodes_per_row:
+                    # Split into multiple rows
+                    num_rows = (len(layer) + max_nodes_per_row - 1) // max_nodes_per_row
+                    for i in range(num_rows):
+                        start_idx = i * max_nodes_per_row
+                        end_idx = start_idx + max_nodes_per_row
+                        split_layers.append(layer[start_idx:end_idx])
+                else:
+                    split_layers.append(layer)
+            
+            # Find the widest layer to scale horizontal spacing
+            max_layer_width = max(len(layer) for layer in split_layers)
+            
+            # Position nodes by layer
+            for y, layer in enumerate(split_layers):
+                # Calculate x position for each node in the layer
+                for x, node in enumerate(layer):
+                    # Center each layer and scale x positions based on max width
+                    x_pos = (x - len(layer)/2) * (3 * max_layer_width / len(layer))
+                    y_pos = -(y + y_offset) * 2  # Multiply by 2 for less vertical space
+                    pos[node] = (x_pos, y_pos)
+            
+            # Update y_offset for next component
+            y_offset += len(split_layers)
         
         return pos
 
