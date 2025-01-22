@@ -11,6 +11,7 @@ from reftrace import Module, ConfigFile, parse_modules
 from reftrace.linting import LintError, LintWarning, LintResults, rule, configrule
 import networkx as nx
 import matplotlib.pyplot as plt
+from .info import info
 
 def load_rules(rules_file: str = "rules.py") -> tuple[List[Callable], List[Callable]]:
     """Load rules from rules.py using the decorators"""
@@ -235,6 +236,8 @@ def cli():
     """reftrace - A linting tool for Nextflow files"""
     pass
 
+cli.add_command(info)
+
 @cli.command()
 @click.option('--rules', '-r', 'rules_file', 
               type=click.Path(),
@@ -373,72 +376,12 @@ def lint(rules_file: str, directory: str, debug: bool, quiet: bool):
     if has_errors:
         sys.exit(1)
 
-@cli.command(name="json")
-@click.option('--directory', '-d', 
-              type=click.Path(exists=True),
-              default='.',
-              help="Directory containing .nf files (default: current directory)")
-@click.option('--pretty/--compact', default=True,
-              help="Pretty print the JSON output (default: pretty)")
-@click.option('--only-paths', is_flag=True, default=False, help="Only show the module path for each module")
-def show_json(directory: str, pretty: bool, only_paths: bool):
-    """Display detailed information about Nextflow modules in JSON format."""
-    modules_info = []
-    
-    with click.progressbar(length=0, label='Parsing Nextflow files', 
-                         show_pos=True, 
-                         show_percent=True,
-                         show_eta=False,
-                         width=40,
-                         file=sys.stderr) as bar:
-        def progress_callback(current: int, total: int):
-            if bar.length == 0:
-                bar.length = total
-            bar.update(current - bar.pos)
-                
-        module_list_result = parse_modules(directory, progress_callback)
-        module_results = module_list_result.results
-        resolved_includes = module_list_result.resolved_includes
-        unresolved_includes = module_list_result.unresolved_includes
-
-        for module_result in module_results:
-            if module_result.error:
-                if module_result.error.likely_rt_bug:
-                    click.secho(f"\nInternal error parsing {module_result.filepath}:", fg="red", err=True)
-                    click.secho(f"  {module_result.error.error}", fg="red", err=True)
-                    click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
-                    sys.exit(1)
-                else:
-                    click.secho(f"\nFailed to parse {module_result.filepath}:", fg="red")
-                    click.secho(f"  {module_result.error.error}", fg="red")
-                    continue
-
-            modules_info.append(module_result.module.to_dict(only_paths=only_paths))
-    
-    # Sort modules by path
-    modules_info.sort(key=lambda x: x['path'])
-    resolved_includes.sort(key=lambda x: x.module_path)
-    unresolved_includes.sort(key=lambda x: x.module_path)
-
-    ret = {
-        "modules": modules_info,
-        "resolved_includes": [i.to_dict() for i in resolved_includes],
-        "unresolved_includes": [i.to_dict() for i in unresolved_includes]
-    }
-
-    # Print JSON output
-    indent = 2 if pretty else None
-    click.echo(json.dumps(ret, indent=indent))
-
-
 @cli.command()
 @click.option('--directory', '-d', 
               type=click.Path(exists=True),
               default='.',
               help="Directory containing .nf files (default: current directory)")
-@click.option('--inline', is_flag=True, default=False,
-              help="Display graph inline in terminal (requires terminal with Kitty image protocol support)")
-def graph(directory: str, inline: bool):
+def graph(directory: str):
     """Generate a dependency graph for the pipeline."""
     modules: List[Module] = []
     
@@ -696,11 +639,6 @@ def graph(directory: str, inline: bool):
                                    edgecolor='none',
                                    alpha=0.7,
                                    pad=2))
-    
-    # plt.title(f"{current_dir} module dependencies", pad=100, size=16, color="white")
-
-    # Remove legend since each node is unique
-    # plt.legend(handles=legend_elements, loc='upper right')
 
     # Add title with directory name and commit hash
     plt.figtext(0.5, 0.95,
