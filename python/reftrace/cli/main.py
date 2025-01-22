@@ -417,6 +417,8 @@ def show_json(directory: str, pretty: bool, only_paths: bool):
     
     # Sort modules by path
     modules_info.sort(key=lambda x: x['path'])
+    resolved_includes.sort(key=lambda x: x.module_path)
+    unresolved_includes.sort(key=lambda x: x.module_path)
 
     ret = {
         "modules": modules_info,
