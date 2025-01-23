@@ -1,8 +1,5 @@
-from typing import List
-import pytest
 import tempfile
-from pathlib import Path
-from reftrace import Module, parse_modules, ModuleResult
+from reftrace import Module, parse_modules, ParseError
 from reftrace.directives import ContainerFormat
 import os
 
@@ -37,9 +34,8 @@ process CAT_FASTQ {
         tmp.flush()
         
         # Create module from file
-        module_result = Module.from_file(tmp.name)
-        assert module_result.error is None
-        module = module_result.module
+        module = Module.from_file(tmp.name)
+        assert not isinstance(module, ParseError)
         
         # Should have one process
         assert len(module.processes) == 1
@@ -82,8 +78,8 @@ class MyClass {
         
         # Create module from file
         module_result = Module.from_file(tmp.name)
-        assert module_result.error is not None
-        assert module_result.error.likely_rt_bug == False
+        assert isinstance(module_result, ParseError)
+        assert module_result.likely_rt_bug == False
         
 
 def test_parse_modules():
@@ -127,27 +123,21 @@ def test_parse_modules():
             progress_calls.append((current, total))
             
         # Process the modules
-        results = parse_modules(tmpdir, progress_callback).results
+        result = parse_modules(tmpdir, progress_callback)
         
         # Verify progress tracking
         assert len(progress_calls) == 2  # Should be called twice
         assert progress_calls[-1] == (2, 2)  # Final call should be (2, 2)
         
         # Check results
-        assert len(results) == 2
-        
-        # Count successes and failures
-        successes = [r for r in results if r.module is not None]
-        failures = [r for r in results if r.error is not None]
-        
-        assert len(successes) == 1
-        assert len(failures) == 1
+        assert len(result.results) == 1
+        assert len(result.errors) == 1
         
         # Verify the valid module
-        valid_result = next(r for r in results if r.module is not None)
-        assert "VALID_PROCESS" in valid_result.module.processes[0].name
+        valid_result = result.results[0]
+        assert "VALID_PROCESS" in valid_result.processes[0].name
         
         # Verify the invalid module
-        invalid_result = next(r for r in results if r.error is not None)
-        assert "myMethod" in invalid_result.error.error  # Error should mention MyClass
+        invalid_result: ParseError = result.errors[0]
+        assert "myMethod" in invalid_result.error  # Error should mention MyClass
         

@@ -4,7 +4,8 @@ import os
 from reftrace import parse_modules
 import networkx as nx
 import matplotlib.pyplot as plt
-from reftrace import Module
+from reftrace import Module, ParseError
+from reftrace.graph import make_graph
 from typing import List
 
 @click.command()
@@ -14,7 +15,6 @@ from typing import List
               help="Directory containing .nf files (default: current directory)")
 def graph(directory: str):
     """Generate a dependency graph for the pipeline."""
-    modules: List[Module] = []
     
     with click.progressbar(length=0, label='Parsing Nextflow files', 
                          show_pos=True, 
@@ -26,32 +26,25 @@ def graph(directory: str):
             if bar.length == 0:
                 bar.length = total
             bar.update(current - bar.pos)
-                
-        module_list_result = parse_modules(directory, progress_callback)
-        module_results = module_list_result.results
 
-        has_errors = False
-
-        for module_result in module_results:
-            if module_result.error:
-                if module_result.error.likely_rt_bug:
-                    click.secho(f"\nInternal error parsing {module_result.filepath}:", fg="red", err=True)
-                    click.secho(f"  {module_result.error.error}", fg="red", err=True)
+        G = make_graph(directory, progress_callback)
+        if not isinstance(G, nx.DiGraph):
+            for error in G:
+                if error.likely_rt_bug:
+                    click.secho(f"\nInternal error parsing {error.path}:", fg="red", err=True)
+                    click.secho(f"  {error.error}", fg="red", err=True)
                     click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
                     sys.exit(1)
                 else:
-                    click.secho(f"\nFailed to parse {module_result.filepath}:", fg="red")
-                    click.secho(f"  {module_result.error.error}", fg="red")
-                    has_errors = True
+                    click.secho(f"\nFailed to parse {error.path}:", fg="red")
+                    click.secho(f"  {error.error}", fg="red")
                     continue
-            else:
-                modules.append(module_result.module)
-        if has_errors:
             click.echo("Please fix parsing errors before generating a graph.")
             sys.exit(1)
-
-    module_names = [m.path for m in modules]
-    resolved_includes = module_list_result.resolved_includes
+        
+        if len(G.nodes()) == 0:
+            click.echo("No Nextflow files found to generate graph.")
+            sys.exit(1)
 
     def split_into_lines(text: str, max_length: int = 20) -> str:
         """Split text into multiple lines, each no longer than max_length characters.
@@ -98,9 +91,7 @@ def graph(directory: str):
         simplified = simplified.replace('/main', '')
         return split_into_lines(simplified)
 
-    G = nx.DiGraph()
-    labels = {path: simplify_path(path) for path in module_names}
-    G.add_nodes_from(module_names)
+    labels = {node: simplify_path(node) for node in G.nodes()}
 
     # Calculate node size based on number of nodes
     num_nodes = len(G.nodes())
@@ -118,10 +109,6 @@ def graph(directory: str):
         font_size = 7
     else:
         font_size = 8
-
-    for include in resolved_includes:
-        for module in include.includes:
-            G.add_edge(include.module_path, module)
 
     def hierarchical_layout(G, root=None, max_nodes_per_row=10):
         """Create a hierarchical layout using networkx"""

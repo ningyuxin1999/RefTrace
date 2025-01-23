@@ -18,7 +18,6 @@ def info():
 @click.option('--paths', is_flag=True, default=False, help="Only show the module path for each module")
 def show_modules_info(directory: str, pretty: bool, paths: bool):
     """Display detailed information about Nextflow modules in JSON format."""
-    modules_info = []
     
     with click.progressbar(length=0, label='Parsing Nextflow files', 
                          show_pos=True, 
@@ -32,23 +31,25 @@ def show_modules_info(directory: str, pretty: bool, paths: bool):
             bar.update(current - bar.pos)
                 
         module_list_result = parse_modules(directory, progress_callback)
-        module_results = module_list_result.results
+        modules = module_list_result.results
         resolved_includes = module_list_result.resolved_includes
         unresolved_includes = module_list_result.unresolved_includes
+        errors = module_list_result.errors
 
-        for module_result in module_results:
-            if module_result.error:
-                if module_result.error.likely_rt_bug:
-                    click.secho(f"\nInternal error parsing {module_result.filepath}:", fg="red", err=True)
-                    click.secho(f"  {module_result.error.error}", fg="red", err=True)
-                    click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
-                    sys.exit(1)
-                else:
-                    click.secho(f"\nFailed to parse {module_result.filepath}:", fg="red")
-                    click.secho(f"  {module_result.error.error}", fg="red")
-                    continue
+        for error in errors:
+            if error.likely_rt_bug:
+                click.secho(f"\nInternal error parsing {error.path}:", fg="red", err=True)
+                click.secho(f"  {error.error}", fg="red", err=True)
+                click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
+                sys.exit(1)
+            else:
+                click.secho(f"\nFailed to parse {error.path}:", fg="red")
+                click.secho(f"  {error.error}", fg="red")
+                continue
 
-            modules_info.append(module_result.module.to_dict(only_paths=paths))
+        modules_info = []
+        for module in modules:
+            modules_info.append(module.to_dict(only_paths=paths))
     
     # Sort modules by path
     modules_info.sort(key=lambda x: x['path'])

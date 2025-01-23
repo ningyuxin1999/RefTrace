@@ -19,6 +19,12 @@ dependencies = [
     "protobuf>=5.29.2",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov"
+]
+
 [tool.setuptools_scm]
 write_to = "python/reftrace/_version.py"
 
@@ -33,7 +39,8 @@ packages = [
     "reftrace.cli",
     "reftrace.linting",
     "reftrace.fixtures",
-    "reftrace.proto"
+    "reftrace.proto",
+    "reftrace.graph"
 ]
 package-data = { "reftrace.bindings" = ["*.so", "*.dylib", "*.dll"], "reftrace.fixtures" = ["rules.py"] }
 

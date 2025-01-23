@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Callable
 from importlib.metadata import version
 import pkgutil
-from reftrace import Module, ConfigFile, parse_modules
+from reftrace import Module, ConfigFile, parse_modules, ParseError
 from reftrace.linting import LintError, LintWarning, LintResults, rule, configrule
 from .graph import graph
 from .info import info
@@ -65,8 +65,8 @@ def run_lint(directory: str, rules_file: str, debug: bool = False) -> List[LintR
     with click.progressbar(nf_files, label='Linting Nextflow files', show_pos=True) as files:
         for nf_file in files:
             module_result = Module.from_file(nf_file)
-            if module_result.error:
-                if module_result.error.likely_rt_bug:
+            if isinstance(module_result, ParseError):
+                if module_result.likely_rt_bug:
                     # Internal error - should be reported as a bug
                     click.secho(f"Internal error parsing {nf_file}:", fg="red", err=True)
                     click.secho(f"  {module_result.error}", fg="red", err=True)
@@ -78,7 +78,7 @@ def run_lint(directory: str, rules_file: str, debug: bool = False) -> List[LintR
                     click.secho(f"  {module_result.error}", fg="red")
                     continue
             else:
-                module = module_result.module
+                module = module_result
 
             module_results = LintResults(
                 module_path=nf_file,
@@ -150,40 +150,42 @@ def run_quicklint(directory: str, rules_file: str, debug: bool = False) -> List[
                 bar.length = total
             bar.update(current - bar.pos)
                 
-        module_results = parse_modules(directory, progress_callback)
+        result = parse_modules(directory, progress_callback)
+        errors = result.errors
+        modules = result.results
 
         user_errors = False
-        
-        for module_result in module_results:
-            if module_result.error:
-                if module_result.error.likely_rt_bug:
-                    # Internal error - should be reported as a bug
-                    click.secho(f"\nInternal error parsing {module_result.filepath}:", fg="red", err=True)
-                    click.secho(f"  {module_result.error.error}", fg="red", err=True)
-                    click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
-                    sys.exit(1)
-                else:
-                    # User error - malformed Nextflow file
-                    click.secho(f"\nFailed to parse {module_result.filepath}:", fg="red")
-                    click.secho(f"  {module_result.error.error}", fg="red")
-                    user_errors = True
-                    continue
 
+        for module in modules:
             lint_results = LintResults(
-                module_path=module_result.filepath,
+                module_path=module.path,
                 errors=[],
                 warnings=[]
             )
 
             for rule in module_rules:
                 if debug:
-                    click.echo(f"Running {rule.__name__} on {module_result.filepath}")
+                    click.echo(f"Running {rule.__name__} on {module.path}")
 
-                rule_result = rule(module_result.module)
+                rule_result = rule(module)
                 lint_results.errors.extend(rule_result.errors)
                 lint_results.warnings.extend(rule_result.warnings)
 
             results.append(lint_results)
+
+        for error in errors:
+            if error.likely_rt_bug:
+                # Internal error - should be reported as a bug
+                click.secho(f"\nInternal error parsing {error.error}:", fg="red", err=True)
+                click.secho(f"  {error.error}", fg="red", err=True)
+                click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
+                sys.exit(1)
+            else:
+                # User error - malformed Nextflow file
+                click.secho(f"\nFailed to parse {error.error}:", fg="red")
+                click.secho(f"  {error.error}", fg="red")
+                user_errors = True
+                continue
 
     if user_errors:
         sys.exit(1)

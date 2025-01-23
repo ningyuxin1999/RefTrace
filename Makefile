@@ -35,10 +35,9 @@ build-python: lib
 	. build-venv/bin/activate && python3 -m build
 
 dev: lib
-	python3 -m venv venv
-	. venv/bin/activate && \
-		python3 -m pip install --upgrade pip && \
-		python3 -m pip install -e ".[dev]"
+	uv venv -p 3.9 && \
+	. .venv/bin/activate && \
+		uv pip install -e ".[dev]"
 
 test: test-go test-python
 
@@ -46,7 +45,7 @@ test-go:
 	go test ./...
 
 test-python: dev
-	. venv/bin/activate && cd python && python3 -m pytest
+	. .venv/bin/activate && cd python && python3 -m pytest --cov=reftrace --cov-report=term-missing
 
 # doesn't rebuild the venv
 test-python-quick:

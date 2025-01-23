@@ -2,7 +2,7 @@ from ..proto import common_pb2, module_pb2
 from .lib import _lib
 import ctypes
 import base64
-from typing import List, Optional
+from typing import List, Optional, Union
 from dataclasses import dataclass
 from functools import cached_property
 from .process import Process
@@ -111,16 +111,24 @@ class IncludeStatement:
         return self._proto.from_module
 
 @dataclass
+class ParseError:
+    """An error can either come from user input (malformed Nextflow files) or may be a bug in RefTrace."""
+    error: str
+    likely_rt_bug: bool
+    path: str
+
+@dataclass
 class Module:
     """Represents a Nextflow module that contains process definitions."""
     _proto: module_pb2.Module  # Internal protobuf representation
 
     @classmethod
-    def from_file(cls, filepath: str) -> 'ModuleResult':
+    def from_file(cls, filepath: str) -> Union['Module', ParseError]:
         encoded_path = filepath.encode('utf-8')
         result_ptr = _lib.Module_New(encoded_path)
         if not result_ptr:
-            return ModuleResult(filepath=filepath, module=None, error=common_pb2.ParseError(likely_rt_bug=True, error="Failed to create module"))
+            # would be an issue with the C API
+            return ParseError(path=filepath, likely_rt_bug=True, error="Failed to create module")
             
         try:
             # Get base64 string from pointer and decode it
@@ -131,9 +139,9 @@ class Module:
             result.ParseFromString(bytes_data)
             
             if result.HasField('error'):
-                return ModuleResult(filepath=filepath, module=None, error=result.error)
+                return ParseError(path=filepath, likely_rt_bug=result.error.likely_rt_bug, error=result.error.error)
                 
-            return ModuleResult(filepath=filepath, module=cls(_proto=result.module), error=None)
+            return cls(_proto=result.module)
         finally:
             _lib.Module_Free(result_ptr)
 
@@ -211,23 +219,10 @@ class Module:
         """Convert the module to JSON format."""
         return json.dumps(self.to_dict(), indent=indent)
 
-    
-@dataclass
-class ParseError:
-    """An error can either come from user input (malformed Nextflow files) or may be a bug in RefTrace."""
-    error: str
-    likely_rt_bug: bool
-
-@dataclass
-class ModuleResult:
-    """Result type for Module creation that can contain either a Module or an error."""
-    filepath: str
-    module: Optional[Module]
-    error: Optional[ParseError]
-
 @dataclass
 class ModuleListResult:
-    results: List[ModuleResult]
+    results: List[Module]
+    errors: List[ParseError]
     resolved_includes: List[ResolvedInclude]
     unresolved_includes: List[UnresolvedInclude]
        
@@ -265,27 +260,23 @@ def parse_modules(directory, progress_callback=None) -> ModuleListResult:
         proto_result.ParseFromString(bytes_data)
         
         results = []
+        errors = []
         for result in proto_result.results:
             if result.HasField('module'):
                 # Success case - create Module instance
-                results.append(ModuleResult(
-                    filepath=result.file_path,
-                    module=Module(_proto=result.module),
-                    error=None
-                ))
+                results.append(Module(_proto=result.module))
             else:
                 # Error case - create ParseError
-                results.append(ModuleResult(
-                    filepath=result.file_path,
-                    module=None,
-                    error=ParseError(
-                        error=result.error.error,
-                        likely_rt_bug=result.error.likely_rt_bug
-                    )
-                ))
-        
+                parse_error = ParseError(
+                    path=result.file_path,
+                    likely_rt_bug=result.error.likely_rt_bug,
+                    error=result.error.error
+                )
+                errors.append(parse_error)
+
         return ModuleListResult(
             results=results,
+            errors=errors,
             resolved_includes=[ResolvedInclude(_proto=i) for i in proto_result.resolved_includes],
             unresolved_includes=[UnresolvedInclude(_proto=i) for i in proto_result.unresolved_includes]
         )
