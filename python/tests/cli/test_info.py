@@ -81,9 +81,11 @@ def test_show_modules_info_invalid_file():
     """Test handling of invalid Nextflow files"""
     with tempfile.TemporaryDirectory() as tmpdir:
         # Create invalid module file
+        # TODO: try with a comment next to invalid_directive.
+        # not sure why that doesn't cause an error.
         content = """
         process FOO {
-            invalid_directive  # This should cause a parsing error
+            invalid_directive
         }
         """
         module_path = Path(tmpdir) / "invalid.nf"

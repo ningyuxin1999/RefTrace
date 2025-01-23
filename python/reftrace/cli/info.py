@@ -43,8 +43,8 @@ def show_modules_info(directory: str, pretty: bool, paths: bool):
                 click.secho("This is likely a bug in reftrace. Please file an issue at https://github.com/RefTrace/RefTrace/issues/new", fg="yellow", err=True)
                 sys.exit(1)
             else:
-                click.secho(f"\nFailed to parse {error.path}:", fg="red")
-                click.secho(f"  {error.error}", fg="red")
+                click.secho(f"\nFailed to parse {error.path}:", fg="red", err=True)
+                click.secho(f"  {error.error}", fg="red", err=True)
                 continue
 
         modules_info = []
