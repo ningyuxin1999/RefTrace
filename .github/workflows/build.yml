@@ -73,6 +73,10 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: |
             set -e
 
+            # Install uv
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            export PATH="$HOME/.cargo/bin:$PATH"
+
             # Install Java
             JAVA_VERSION=17
             JAVA_DIR="$PWD/java"
@@ -121,6 +125,10 @@ jobs:
           CIBW_BEFORE_BUILD_MACOS: |
             set -e
 
+            # Install uv
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            export PATH="$HOME/.cargo/bin:$PATH"
+
             make setup-deps
 
             # Add protoc to PATH
@@ -130,7 +138,7 @@ jobs:
             # Add GOPATH/bin to PATH
             export PATH="$(go env GOPATH)/bin:$PATH"
 
-            pip install setuptools_scm
+            uv pip install setuptools_scm
             echo -e "\nSetuptools SCM Version BEFORE proto:"
             python3 -m setuptools_scm
 
